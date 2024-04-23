@@ -130,7 +130,6 @@ int main(void) {
       l = i;
       printf("hkjskdf\n");
       double amplitude = clamp(te_eval(amplitude_expr), 0, 255);
-      amplitude = l*30;
       printf("before : the storm : %f %d %f \n", l, i, amplitude);
       double period = clamp(te_eval(period_expr), 0, 255);
       signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
