@@ -3,16 +3,17 @@
 #define TERMINAL "/dev/ttyUSB0"
 
 #include "signals.h"
-#include <errno.h>
+#include "tinyexpr.h"
 #include <fcntl.h>
+#include <libconfig.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 30;
-const int ROD_HEIGHT = 20;
+const int ROD_HEIGHT = 40;
 const Color colors[] = {LIGHTGRAY, RED,   GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE,   ORANGE};
 
@@ -82,6 +83,40 @@ int main(void) {
   /*   } else { /\* rdlen == 0 *\/ */
   /*     printf("Timeout from read\n"); */
   /*   } */
+
+  config_t cfg;
+  config_init(&cfg);
+  if (!config_read_file(&cfg, "example.cfg")) {
+    fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
+            config_error_line(&cfg), config_error_text(&cfg));
+    config_destroy(&cfg);
+    return (EXIT_FAILURE);
+  }
+
+  uint8_t l;
+  int err;
+  const char *amplitude_string_expr;
+  te_expr *amplitude_expr;
+  if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
+    te_variable vars[] = {{"l", &l}};
+    amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
+  }
+
+  const char *period_string_expr;
+  te_expr *period_expr;
+  if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) {
+    te_variable vars[] = {{"l", &l}};
+    period_expr = te_compile(period_string_expr, vars, 1, &err);
+  }
+
+  Signal signals[NB_RODS_MENU];
+  int i;
+  for (i=0; i<NB_RODS_MENU; i++) {
+      l = i;
+      int amplitude = te_eval(amplitude_expr);
+      int period = te_eval(period_expr);
+      signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
+  }
 
   Signal signal = signal_new(SINE, 255, 0, 0, 30, 0);
 

@@ -400,6 +400,7 @@ endif
 # Define source code object files required
 #------------------------------------------------------------------------------------------------
 PROJECT_SOURCE_FILES ?= \
+    tinyexpr.c \
     signals.c \
     main.c \
 
