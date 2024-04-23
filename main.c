@@ -98,10 +98,12 @@ int main(void) {
   int err;
   const char *amplitude_string_expr;
   te_expr *amplitude_expr;
+  printf("still good\n");
   if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
     te_variable vars[] = {{"l", &l}};
     amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
   }
+  printf("oho no");
 
   const char *period_string_expr;
   te_expr *period_expr;
@@ -109,6 +111,7 @@ int main(void) {
     te_variable vars[] = {{"l", &l}};
     period_expr = te_compile(period_string_expr, vars, 1, &err);
   }
+  printf("hmm");
 
   Signal signals[NB_RODS_MENU];
   int i;
