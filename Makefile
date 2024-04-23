@@ -400,6 +400,7 @@ endif
 # Define source code object files required
 #------------------------------------------------------------------------------------------------
 PROJECT_SOURCE_FILES ?= \
+    signals.c \
     main.c \
 
 # Define all object files from source files
