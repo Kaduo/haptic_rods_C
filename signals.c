@@ -109,7 +109,6 @@ void clear_signal(int fd) {
 void ping(int fd) {
     #define PING_BUFFER_LEN 1
     unsigned char buffer[PING_BUFFER_LEN] = {PING_PROTOCOL};
-
     write_to_tty(fd, buffer, PING_BUFFER_LEN);
 }
 

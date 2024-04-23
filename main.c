@@ -41,7 +41,7 @@ int main(void)
 
     ping(fd);
 
-        unsigned char buf[1];
+        unsigned char buf[2];
         int rdlen;
 
         rdlen = read(fd, buf, sizeof(buf) - 1);
