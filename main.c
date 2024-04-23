@@ -65,7 +65,7 @@ int main(void)
     
     Signal signal = signal_new(
         SINE,
-        100,
+        255,
         0,
         0,
         30,
