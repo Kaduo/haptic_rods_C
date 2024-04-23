@@ -128,6 +128,7 @@ int main(void) {
   }
 
 
+  printf("hiii\n");
   const int WINDOW_WIDTH = 1024;
   const int WINDOW_HEIGHT = 600;
 
