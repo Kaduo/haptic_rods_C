@@ -1,4 +1,7 @@
 #include "raylib.h"
+#define TERMINAL    "/dev/ttyUSB0"
+
+#include "signals.h"
 
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 30;
@@ -25,11 +28,24 @@ void InitRodsMenu(Rod rodsMenu[]) {
 
 }
 
-
 int main(void)
 {
-    const int WINDOW_HEIGHT = 800;
-    const int WINDOW_WIDTH = 800;
+    int fd;
+    fd = connect_to_tty();
+
+    Signal signal = signal_new(
+        SINE,
+        100,
+        0,
+        0,
+        30,
+        0
+);
+
+
+
+    const int WINDOW_WIDTH = 1024;
+    const int WINDOW_HEIGHT = 600;
 
     int selected = -1;
     int deltaX = 0;
@@ -55,11 +71,14 @@ int main(void)
                     selected = i;
                     deltaX = rodsMenu[i].rect.x - mousePosition.x;
                     deltaY = rodsMenu[i].rect.y - mousePosition.y;
+
+                    set_signal(fd, 0, 0, signal);
                     break;
                 }
             }
         } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             selected = -1;
+            clear_signal(fd);
         }
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
@@ -77,4 +96,3 @@ int main(void)
 
     return 0;
 }
-
