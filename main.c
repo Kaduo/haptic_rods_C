@@ -113,7 +113,7 @@ int main(void) {
       printf("uh wtf\n");
     te_variable vars[] = {{"l", &l}};
     printf("is this real life ?\n");
-    period_expr = te_compile(period_string_expr, vars, 1, &err);
+    period_expr = te_compile(period_string_expr, vars, 0, &err);
     printf("rightich ?");
   }
   printf("hmm");
