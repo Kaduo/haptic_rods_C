@@ -97,6 +97,8 @@ void add_signal(int fd, int8_t angle, int8_t pulses, Signal signal) {
     (unsigned char)signal.phase,
     (unsigned char)(signal.phase >> 8),
 };
+    printf("period1 : %d", (unsigned char)signal.period);
+    printf("period2 : %d", (unsigned char)(signal.period >> 8));
     write_to_tty(fd, buffer, ADD_BUFFER_LEN);
 }
 
