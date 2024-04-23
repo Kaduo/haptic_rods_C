@@ -110,7 +110,9 @@ int main(void) {
   const char *period_string_expr;
   te_expr *period_expr;
   if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) {
+      printf("uh wtf\n");
     te_variable vars[] = {{"l", &l}};
+    printf("is this real life ?\n");
     period_expr = te_compile(period_string_expr, vars, 1, &err);
   }
   printf("hmm");
