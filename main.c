@@ -137,8 +137,6 @@ int main(void) {
   }
 
 
-  const int WINDOW_WIDTH = 1024;
-  const int WINDOW_HEIGHT = 600;
 
   int selected = -1;
   int deltaX = 0;
@@ -146,7 +144,9 @@ int main(void) {
 
   Rod rodsMenu[NB_RODS_MENU];
   InitRodsMenu(rodsMenu);
-  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "HapticRods");
+  int display = GetCurrentMonitor();
+
+  InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
 
   int time;
   time = 0;
