@@ -100,10 +100,12 @@ int main(void) {
   te_expr *amplitude_expr;
   printf("still good\n");
   if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
+      printf("where\n");
     te_variable vars[] = {{"l", &l}};
+    printf("are we ?\n");
     amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
   }
-  printf("oho no");
+  printf("oho no\n");
 
   const char *period_string_expr;
   te_expr *period_expr;
