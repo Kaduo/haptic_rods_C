@@ -110,6 +110,7 @@ int main(void)
         } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             selected = -1;
             clear_signal(fd);
+            play_signal(fd, 0);
         }
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {

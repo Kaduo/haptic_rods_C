@@ -114,16 +114,23 @@ void ping(int fd) {
     write_to_tty(fd, buffer, PING_BUFFER_LEN);
 }
 
-void play_signal(int fd) {
+void play_signal(int fd, int play) {
     #define PLAY_BUFFER_LEN 2
-    unsigned char buffer[PLAY_BUFFER_LEN] = {PLAY_PROTOCOL, 0x01};
+    unsigned char buffer[PLAY_BUFFER_LEN] = {PLAY_PROTOCOL, play};
     write_to_tty(fd, buffer, PLAY_BUFFER_LEN);
 }
 
 void set_signal(int fd, int8_t angle, int8_t pulses, Signal signal) {
     clear_signal(fd);
     add_signal(fd, angle, pulses, signal);
-    play_signal(fd);
+    play_signal(fd, 1);
+}
+
+void set_direction(int fd, int8_t angle, int16_t speed) {
+    #define DIR_BUFFER_LEN 4
+
+    unsigned char buffer[DIR_BUFFER_LEN] = {SET_DIR_PROTOCOL, angle, speed, speed >> 8};
+    write_to_tty(fd, buffer, DIR_BUFFER_LEN);
 }
 
 Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uint8_t duty, uint8_t period, uint8_t phase) {
