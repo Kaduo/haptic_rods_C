@@ -103,7 +103,7 @@ int main(void)
                     deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
                     printf("hi there ! \n");
-                    set_signal(fd, 0, 0, signal);
+                    set_signal(fd, -1, -1, signal);
                     break;
                 }
             }
