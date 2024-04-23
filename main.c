@@ -125,6 +125,7 @@ int main(void) {
       l = i;
       printf("hkjskdf\n");
       int amplitude = te_eval(amplitude_expr);
+      amplitude = l*30;
       printf("before : the storm : %d %d\n", l, i);
       /* int period = te_eval(period_expr); */
       signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
