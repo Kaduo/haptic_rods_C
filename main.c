@@ -94,7 +94,7 @@ int main(void) {
   }
   printf("hello world\n");
 
-  int l;
+  double l;
   int err;
   const char *amplitude_string_expr;
   const te_expr *amplitude_expr;
@@ -124,12 +124,12 @@ int main(void) {
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
       printf("hkjskdf\n");
-      int amplitude = te_eval(amplitude_expr);
+      double amplitude = te_eval(amplitude_expr);
       amplitude = l*30;
-      printf("before : the storm : %d %d\n", l, i);
+      printf("before : the storm : %f %d %f \n", l, i, amplitude);
       /* int period = te_eval(period_expr); */
       signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
-      printf("%d \n", signals[i].amplitude);
+      printf("after : %d \n", signals[i].amplitude);
   }
 
 
