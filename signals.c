@@ -97,8 +97,6 @@ void add_signal(int fd, int8_t angle, int8_t pulses, Signal signal) {
     (unsigned char)signal.phase,
     (unsigned char)(signal.phase >> 8),
 };
-    printf("period1 : %d", (unsigned char)signal.period);
-    printf("period2 : %d", (unsigned char)(signal.period >> 8));
     write_to_tty(fd, buffer, ADD_BUFFER_LEN);
 }
 
@@ -133,7 +131,7 @@ void set_direction(int fd, int8_t angle, int16_t speed) {
     write_to_tty(fd, buffer, DIR_BUFFER_LEN);
 }
 
-Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uint8_t duty, uint8_t period, uint8_t phase) {
+Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uint8_t duty, uint16_t period, uint16_t phase) {
     Signal sig;
     sig.signal_type = signal_type;
     sig.amplitude = amplitude;

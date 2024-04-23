@@ -97,43 +97,47 @@ int main(void) {
     config_destroy(&cfg);
     return (EXIT_FAILURE);
   }
-  printf("hello world\n");
 
   double l;
   int err;
   const char *amplitude_string_expr;
   const te_expr *amplitude_expr;
   te_variable vars[] = {{"l", &l}};
-  printf("still good\n");
+
   if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
-      printf("where\n");
-    printf("are we ?\n");
     amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
-    printf("err : %d\n", err);
   }
-  printf("oho no\n");
 
   const char *period_string_expr;
   te_expr *period_expr;
   if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) {
-      printf("uh wtf\n");
     te_variable vars[] = {{"l", &l}};
-    printf("is this real life ?\n");
     period_expr = te_compile(period_string_expr, vars, 1, &err);
-    printf("rightich ?");
   }
-  printf("hmm");
+
+  const char *duty_string_expr;
+  te_expr *duty_expr;
+  if (config_lookup_string(&cfg, "duty_expr", &duty_string_expr)) {
+    te_variable vars[] = {{"l", &l}};
+    duty_expr = te_compile(duty_string_expr, vars, 1, &err);
+  }
+
+  const char *offset_string_expr;
+  te_expr *offset_expr;
+  if (config_lookup_string(&cfg, "offset_expr", &offset_string_expr)) {
+    te_variable vars[] = {{"l", &l}};
+    offset_expr = te_compile(offset_string_expr, vars, 1, &err);
+  }
 
   Signal signals[NB_RODS_MENU];
   int i;
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
-      printf("hkjskdf\n");
-      double amplitude = clamp(te_eval(amplitude_expr), 0, 255);
-      printf("before : the storm : %f %d %f \n", l, i, amplitude);
-      double period = clamp(te_eval(period_expr), 0, 255);
-      signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
-      printf("after : %d \n", signals[i].amplitude);
+      double amplitude = clamp(te_eval(amplitude_expr), 0, 0xFF);
+      double period = clamp(te_eval(period_expr), 0, 0xFFFF);
+      double duty = clamp(te_eval(duty_expr), 0, 0xFF);
+      double offset = clamp(te_eval(offset_expr), 0, 0xFF);
+      signals[i] = signal_new(SINE, amplitude, offset, duty, period, 0);
   }
 
 
