@@ -94,7 +94,7 @@ int main(void) {
   }
   printf("hello world\n");
 
-  int l;
+  uint8_t l;
   int err;
   const char *amplitude_string_expr;
   const te_expr *amplitude_expr;
@@ -120,7 +120,7 @@ int main(void) {
   /* printf("hmm"); */
 
   Signal signals[NB_RODS_MENU];
-  int i;
+  uint8_t i;
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
       printf("hkjskdf\n");
