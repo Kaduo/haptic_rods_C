@@ -76,7 +76,8 @@ int main(void)
 
     clear_signal(fd);
     write_to_tty(fd, xstr, 11);
-    write_to_tty(fd, hmm, 1);
+    play_signal(fd);
+
 
 
 
