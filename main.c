@@ -92,6 +92,7 @@ int main(void) {
     config_destroy(&cfg);
     return (EXIT_FAILURE);
   }
+  printf("hello world\n");
 
   uint8_t l;
   int err;
