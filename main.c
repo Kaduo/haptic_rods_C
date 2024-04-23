@@ -97,7 +97,7 @@ int main(void) {
   uint8_t l;
   int err;
   const char *amplitude_string_expr;
-  te_expr *amplitude_expr;
+  const te_expr *amplitude_expr;
   te_variable vars[] = {{"l", &l}};
   printf("still good\n");
   if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
@@ -124,10 +124,10 @@ int main(void) {
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
       printf("hkjskdf\n");
-      /* int amplitude = te_eval(amplitude_expr); */
+      int amplitude = te_eval(amplitude_expr);
       printf("haha?!");
       /* int period = te_eval(period_expr); */
-      signals[i] = signal_new(SINE, l*30, 0, 0, 30, 0);
+      signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
   }
 
 
