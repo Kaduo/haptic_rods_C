@@ -104,6 +104,7 @@ int main(void) {
       printf("where\n");
     printf("are we ?\n");
     amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
+    printf("err : %d\n", err);
   }
   printf("oho no\n");
 
