@@ -128,6 +128,7 @@ int main(void) {
       printf("haha?!");
       /* int period = te_eval(period_expr); */
       signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
+      printf("%d", signals[i].amplitude);
   }
 
 
