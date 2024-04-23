@@ -107,24 +107,24 @@ int main(void) {
   }
   printf("oho no\n");
 
-  const char *period_string_expr;
-  te_expr *period_expr;
-  if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) {
-      printf("uh wtf\n");
-    te_variable vars[] = {{"l", &l}};
-    printf("is this real life ?\n");
-    period_expr = te_compile(period_string_expr, vars, 0, &err);
-    printf("rightich ?");
-  }
-  printf("hmm");
+  /* const char *period_string_expr; */
+  /* te_expr *period_expr; */
+  /* if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) { */
+  /*     printf("uh wtf\n"); */
+  /*   te_variable vars[] = {{"l", &l}}; */
+  /*   printf("is this real life ?\n"); */
+  /*   period_expr = te_compile(period_string_expr, vars, 1, &err); */
+  /*   printf("rightich ?"); */
+  /* } */
+  /* printf("hmm"); */
 
   Signal signals[NB_RODS_MENU];
   int i;
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
       int amplitude = te_eval(amplitude_expr);
-      int period = te_eval(period_expr);
-      signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
+      /* int period = te_eval(period_expr); */
+      signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
   }
 
 
