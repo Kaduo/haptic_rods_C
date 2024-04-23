@@ -104,7 +104,6 @@ int main(void)
 
                     printf("hi there ! \n");
                     set_signal(fd, -1, -1, signal);
-                    printf("\n what's taht ! %d \n", (unsigned char)(-1));
                     break;
                 }
             }

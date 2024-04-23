@@ -85,13 +85,13 @@ void write_to_tty(int fd, unsigned char *buffer, int buffer_len) {
 void add_signal(int fd, int8_t angle, int8_t pulses, Signal signal) {
     #define ADD_BUFFER_LEN  11
     unsigned char buffer[ADD_BUFFER_LEN] = {
-    ADD_SIGNAL_PROTOCOL,
+    (unsigned char)ADD_SIGNAL_PROTOCOL,
     (unsigned char)angle,
     (unsigned char)pulses,
-    signal.signal_type,
-    signal.amplitude,
-    signal.offset,
-    signal.duty,
+    (unsigned char)signal.signal_type,
+    (unsigned char)signal.amplitude,
+    (unsigned char)signal.offset,
+    (unsigned char)signal.duty,
     (unsigned char)signal.period,
     (unsigned char)(signal.period >> 8),
     (unsigned char)signal.phase,
