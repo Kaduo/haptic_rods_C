@@ -74,6 +74,7 @@ int main(void)
     unsigned char xstr[11] = {0x83, 0xFF,0xFF,0x02,0xFF,0x00,0x00,0x1E,0x00,0x00,0x00};
     unsigned char hmm[1] = {0x84};
 
+    clear_signal(fd);
     write_to_tty(fd, xstr, 11);
     write_to_tty(fd, hmm, 1);
 

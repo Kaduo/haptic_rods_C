@@ -115,8 +115,8 @@ void ping(int fd) {
 }
 
 void play_signal(int fd) {
-    #define PLAY_BUFFER_LEN 1
-    unsigned char buffer[PLAY_BUFFER_LEN] = {PLAY_PROTOCOL};
+    #define PLAY_BUFFER_LEN 2
+    unsigned char buffer[PLAY_BUFFER_LEN] = {PLAY_PROTOCOL, 0x01};
     write_to_tty(fd, buffer, PLAY_BUFFER_LEN);
 }
 
