@@ -2,6 +2,12 @@
 #define TERMINAL    "/dev/ttyUSB0"
 
 #include "signals.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 30;
@@ -33,6 +39,30 @@ int main(void)
     int fd;
     fd = connect_to_tty();
 
+    ping(fd);
+
+        unsigned char buf[1];
+        int rdlen;
+
+        rdlen = read(fd, buf, sizeof(buf) - 1);
+        if (rdlen > 0) {
+#ifdef DISPLAY_STRING
+            buf[rdlen] = 0;
+            printf("Read %d: \"%s\"\n", rdlen, buf);
+#else /* display hex */
+            unsigned char   *p;
+            printf("Read %d:", rdlen);
+            for (p = buf; rdlen-- > 0; p++)
+                printf(" 0x%x", *p);
+            printf("\n");
+#endif
+        } else if (rdlen < 0) {
+            printf("Error from read: %d: %s\n", rdlen, strerror(errno));
+        } else {  /* rdlen == 0 */
+            printf("Timeout from read\n");
+        }
+
+    
     Signal signal = signal_new(
         SINE,
         100,

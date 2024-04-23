@@ -106,6 +106,13 @@ void clear_signal(int fd) {
     write_to_tty(fd, buffer, CLEAR_BUFFER_LEN);
 }
 
+void ping(int fd) {
+    #define PING_BUFFER_LEN 1
+    unsigned char buffer[PING_BUFFER_LEN] = {PING_PROTOCOL};
+
+    write_to_tty(fd, buffer, PING_BUFFER_LEN);
+}
+
 void play_signal(int fd) {
     #define PLAY_BUFFER_LEN 1
     unsigned char buffer[PLAY_BUFFER_LEN] = {PLAY_PROTOCOL};

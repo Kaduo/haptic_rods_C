@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef enum  {
+PING_PROTOCOL = 0x01,
 PLAY_PROTOCOL = 0x84,
 CLEAR_PROTOCOL = 0x85,
 ADD_SIGNAL_PROTOCOL = 0x83,
@@ -30,4 +31,5 @@ void write_to_tty(int fd, unsigned char *buffer, int buffer_len);
 void set_signal(int fd, int8_t angle, int8_t pulses, Signal signal);
 Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uint8_t duty, uint8_t period, uint8_t phase);
 void clear_signal(int fd);
+void ping(int fd);
 #endif // SIGNALS_H_
