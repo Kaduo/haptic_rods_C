@@ -94,7 +94,7 @@ int main(void) {
   }
   printf("hello world\n");
 
-  uint8_t l;
+  int l;
   int err;
   const char *amplitude_string_expr;
   const te_expr *amplitude_expr;
