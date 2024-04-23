@@ -125,14 +125,13 @@ int main(void) {
       l = i;
       printf("hkjskdf\n");
       int amplitude = te_eval(amplitude_expr);
-      printf("haha?!");
+      printf("before : the storm : %d\n", amplitude);
       /* int period = te_eval(period_expr); */
       signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
-      printf("%d", signals[i].amplitude);
+      printf("%d \n", signals[i].amplitude);
   }
 
 
-  printf("hiii\n");
   const int WINDOW_WIDTH = 1024;
   const int WINDOW_HEIGHT = 600;
 
