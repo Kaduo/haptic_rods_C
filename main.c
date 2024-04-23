@@ -122,7 +122,9 @@ int main(void) {
   int i;
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
+      printf("hkjskdf\n");
       int amplitude = te_eval(amplitude_expr);
+      printf("haha?!");
       /* int period = te_eval(period_expr); */
       signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
   }
