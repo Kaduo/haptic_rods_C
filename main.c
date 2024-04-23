@@ -72,12 +72,12 @@ int main(void)
         0
 );
     unsigned char xstr[11] = {0x83, 0xFF,0xFF,0x02,0xFF,0x00,0x00,0x1E,0x00,0x00,0x00};
-    unsigned char hmm[1] = {0x84};
+    unsigned char xstr2[2] = {0x84, 0x01};
 
-    clear_signal(fd);
+    printf("here\n");
     write_to_tty(fd, xstr, 11);
-    play_signal(fd);
-
+    write_to_tty(fd, xstr2, 2);
+    printf("there\n");
 
 
 
