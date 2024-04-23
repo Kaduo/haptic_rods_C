@@ -35,4 +35,5 @@ Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uin
 void clear_signal(int fd);
 void play_signal(int fd, int play);
 void ping(int fd);
+void set_direction(int fd, int8_t angle, int16_t speed);
 #endif // SIGNALS_H_

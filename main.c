@@ -40,6 +40,7 @@ int main(void)
     fd = connect_to_tty();
 
     ping(fd);
+    set_direction(fd, 0, 300);
 
         unsigned char buf[2];
         int rdlen;
