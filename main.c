@@ -64,20 +64,13 @@ int main(void)
 
     
     Signal signal = signal_new(
-        SINE,
+        STEADY,
         100,
         0,
         0,
         30,
         0
 );
-    unsigned char xstr[11] = {0x83, 0xFF,0xFF,0x02,0xFF,0x00,0x00,0x1E,0x00,0x00,0x00};
-    unsigned char xstr2[2] = {0x84, 0x01};
-
-    printf("here\n");
-    write_to_tty(fd, xstr, 11);
-    write_to_tty(fd, xstr2, 2);
-    printf("there\n");
 
 
 

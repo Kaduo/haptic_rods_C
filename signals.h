@@ -13,6 +13,7 @@ CLEAR_PROTOCOL = 0x85,
 
 typedef enum {
 SINE = 0x02,
+STEADY = 0x01,
 } SignalType;
 
 typedef struct {
