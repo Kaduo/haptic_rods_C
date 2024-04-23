@@ -56,6 +56,11 @@ int compute_angle(int delta_x, int delta_y) {
                       (Vector2){.x = delta_x, .y = delta_y});
 }
 
+double clamp(double d, double min, double max) {
+  const double t = d < min ? min : d;
+  return t > max ? max : t;
+}
+
 int main(void) {
   int fd;
   fd = connect_to_tty();
@@ -108,27 +113,27 @@ int main(void) {
   }
   printf("oho no\n");
 
-  /* const char *period_string_expr; */
-  /* te_expr *period_expr; */
-  /* if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) { */
-  /*     printf("uh wtf\n"); */
-  /*   te_variable vars[] = {{"l", &l}}; */
-  /*   printf("is this real life ?\n"); */
-  /*   period_expr = te_compile(period_string_expr, vars, 1, &err); */
-  /*   printf("rightich ?"); */
-  /* } */
-  /* printf("hmm"); */
+  const char *period_string_expr;
+  te_expr *period_expr;
+  if (config_lookup_string(&cfg, "period_expr", &period_string_expr)) {
+      printf("uh wtf\n");
+    te_variable vars[] = {{"l", &l}};
+    printf("is this real life ?\n");
+    period_expr = te_compile(period_string_expr, vars, 1, &err);
+    printf("rightich ?");
+  }
+  printf("hmm");
 
   Signal signals[NB_RODS_MENU];
   int i;
   for (i=0; i<NB_RODS_MENU; i++) {
       l = i;
       printf("hkjskdf\n");
-      double amplitude = te_eval(amplitude_expr);
+      double amplitude = clamp(te_eval(amplitude_expr), 0, 255);
       amplitude = l*30;
       printf("before : the storm : %f %d %f \n", l, i, amplitude);
-      /* int period = te_eval(period_expr); */
-      signals[i] = signal_new(SINE, amplitude, 0, 0, 30, 0);
+      double period = clamp(te_eval(period_expr), 0, 255);
+      signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
       printf("after : %d \n", signals[i].amplitude);
   }
 
