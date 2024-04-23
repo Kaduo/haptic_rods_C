@@ -349,7 +349,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),LINUX)
         # Libraries for Debian GNU/Linux desktop compiling
         # NOTE: Required packages: libegl1-mesa-dev
-        LDLIBS = -lraylib -lGL -lm -lpthread -ldl -lrt
+        LDLIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -l:libconfig.a
 
         # On X11 requires also below libraries
         LDLIBS += -lX11

@@ -86,7 +86,7 @@ int main(void) {
 
   config_t cfg;
   config_init(&cfg);
-  if (!config_read_file(&cfg, "example.cfg")) {
+  if (!config_read_file(&cfg, "config.cfg")) {
     fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
             config_error_line(&cfg), config_error_text(&cfg));
     config_destroy(&cfg);
@@ -118,7 +118,6 @@ int main(void) {
       signals[i] = signal_new(SINE, amplitude, 0, 0, period, 0);
   }
 
-  Signal signal = signal_new(SINE, 255, 0, 0, 30, 0);
 
   const int WINDOW_WIDTH = 1024;
   const int WINDOW_HEIGHT = 600;
