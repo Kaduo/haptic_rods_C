@@ -98,10 +98,10 @@ int main(void) {
   int err;
   const char *amplitude_string_expr;
   te_expr *amplitude_expr;
+  te_variable vars[] = {{"l", &l}};
   printf("still good\n");
   if (config_lookup_string(&cfg, "amplitude_expr", &amplitude_string_expr)) {
       printf("where\n");
-    te_variable vars[] = {{"l", &l}};
     printf("are we ?\n");
     amplitude_expr = te_compile(amplitude_string_expr, vars, 1, &err);
   }
