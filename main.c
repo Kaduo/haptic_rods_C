@@ -38,7 +38,7 @@ void InitRodsMenu(Rod rodsMenu[]) {
   }
 }
 
-int compute_speed(int delta_x, int delta_y, int *old_time) {
+int compute_speed(float delta_x, float delta_y, float *old_time) {
   int new_time = GetFrameTime();
   int speed;
   if ((*old_time != 0) && (new_time - *old_time != 0)) {
@@ -51,7 +51,7 @@ int compute_speed(int delta_x, int delta_y, int *old_time) {
   return speed;
 }
 
-int compute_angle(int delta_x, int delta_y) {
+int compute_angle(float delta_x, float delta_y) {
   printf("%f", Vector2Angle((Vector2){.x = 1, .y = 0},
                       (Vector2){.x = delta_x, .y = delta_y})
 );
@@ -164,7 +164,7 @@ int main(void) {
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
 
-  int time;
+  float time;
   time = 0;
   // Main loop
   while (!WindowShouldClose()) {
@@ -193,10 +193,12 @@ int main(void) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
+      float dx = mousePosition.x + deltaX - rodsMenu[selected].rect.x;
+      float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
-      set_direction(fd, compute_angle(deltaX, deltaY), compute_speed(deltaX, deltaY, &time));
-      printf("%d\n", compute_angle(deltaX, deltaY));
+      set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      printf("%d\n", compute_angle(dx, dy));
     }
 
     // Draw menu
