@@ -162,7 +162,7 @@ int main(void) {
   InitRodsMenu(rodsMenu);
   int display = GetCurrentMonitor();
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
-  printf("%d", IsWindowFullscreen());
+  printf("HEY I'M FULLSCREE ? %d\n", IsWindowFullscreen());
   ToggleFullscreen();
 
   float time;
