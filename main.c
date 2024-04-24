@@ -106,8 +106,8 @@ int main(void) {
   bool config_error = false;
   config_t cfg = read_config(&config_error);
   if (config_error) {
-      return (EXIT_FAILURE);
-    }
+    return (EXIT_FAILURE);
+  }
 
   double l;
   int err;
@@ -142,13 +142,13 @@ int main(void) {
 
   Signal signals[NB_RODS_MENU];
   int i;
-  for (i=0; i<NB_RODS_MENU; i++) {
-      l = i;
-      double amplitude = clamp(te_eval(amplitude_expr), 0, 0xFF);
-      double period = clamp(te_eval(period_expr), 0, 0xFFFF);
-      double duty = clamp(te_eval(duty_expr), 0, 0xFF);
-      double offset = clamp(te_eval(offset_expr), 0, 0xFF);
-      signals[i] = signal_new(SINE, amplitude, offset, duty, period, 0);
+  for (i = 0; i < NB_RODS_MENU; i++) {
+    l = i;
+    double amplitude = clamp(te_eval(amplitude_expr), 0, 0xFF);
+    double period = clamp(te_eval(period_expr), 0, 0xFFFF);
+    double duty = clamp(te_eval(duty_expr), 0, 0xFF);
+    double offset = clamp(te_eval(offset_expr), 0, 0xFF);
+    signals[i] = signal_new(SINE, amplitude, offset, duty, period, 0);
   }
 
   int selected = -1;
@@ -192,7 +192,7 @@ int main(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
-      set_direction(fd, 0, compute_speed(deltaX, deltaY, &time));
+      set_direction(fd, compute_angle(deltaX, deltaY), compute_speed(deltaX, deltaY, &time));
     }
 
     // Draw menu
