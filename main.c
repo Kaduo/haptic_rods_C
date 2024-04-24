@@ -88,7 +88,7 @@ int main(void) {
   Signal s2 = signal_new(SINE, 127, 0, 0, 30, 3);
   add_signal(fd, -1, -1, s2);
   sleep(30);
-  add_signal(fd, -1, -1, s2)
+  add_signal(fd, -1, -1, s2);
   /*   unsigned char buf[2]; */
   /*   int rdlen; */
 
