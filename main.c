@@ -193,6 +193,7 @@ int main(void) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
       set_direction(fd, compute_angle(deltaX, deltaY), compute_speed(deltaX, deltaY, &time));
+      printf("%d\n", compute_angle(deltaX, deltaY));
     }
 
     // Draw menu
