@@ -61,6 +61,20 @@ double clamp(double d, double min, double max) {
   return t > max ? max : t;
 }
 
+config_t read_config(bool *err) {
+  config_t cfg;
+  config_init(&cfg);
+  if (!config_read_file(&cfg, "config.cfg")) {
+    fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
+            config_error_line(&cfg), config_error_text(&cfg));
+    config_destroy(&cfg);
+    *err = true;
+  } else {
+    *err = false;
+  }
+  return cfg;
+}
+
 int main(void) {
   int fd;
   fd = connect_to_tty();
@@ -89,14 +103,11 @@ int main(void) {
   /*     printf("Timeout from read\n"); */
   /*   } */
 
-  config_t cfg;
-  config_init(&cfg);
-  if (!config_read_file(&cfg, "config.cfg")) {
-    fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
-            config_error_line(&cfg), config_error_text(&cfg));
-    config_destroy(&cfg);
-    return (EXIT_FAILURE);
-  }
+  bool config_error = false;
+  config_t cfg = read_config(&config_error);
+  if (config_error) {
+      return (EXIT_FAILURE);
+    }
 
   double l;
   int err;
@@ -140,8 +151,6 @@ int main(void) {
       signals[i] = signal_new(SINE, amplitude, offset, duty, period, 0);
   }
 
-
-
   int selected = -1;
   int deltaX = 0;
   int deltaY = 0;
@@ -170,7 +179,6 @@ int main(void) {
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
-          printf("hi there ! \n");
           set_signal(fd, -1, -1, signals[i]);
           break;
         }
