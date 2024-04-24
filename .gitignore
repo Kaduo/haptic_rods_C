@@ -1,3 +1,5 @@
 *.o
 /.cache/
 /bin/
+raylib_game
+haptic_rods

@@ -29,7 +29,7 @@
 PLATFORM              ?= PLATFORM_DESKTOP
 
 # Define project variables
-PROJECT_NAME          ?= raylib_game
+PROJECT_NAME          ?= haptic_rods
 PROJECT_VERSION       ?= 1.0
 PROJECT_BUILD_PATH    ?= .
 
@@ -486,3 +486,12 @@ endif
 clean_shell_cmd: SHELL=cmd
 clean_shell_cmd:
 	del *.o *.exe $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm /s
+
+update:
+	git pull
+	$(MAKE)
+
+
+update_and_run:
+	$(MAKE) update
+	DISPLAY=:0 $(MAKE) run
