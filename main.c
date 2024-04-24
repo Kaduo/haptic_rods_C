@@ -52,9 +52,6 @@ int compute_speed(float delta_x, float delta_y, float *old_time) {
 }
 
 int compute_angle(float delta_x, float delta_y) {
-  printf("%f", Vector2Angle((Vector2){.x = 1, .y = 0},
-                      (Vector2){.x = delta_x, .y = delta_y})
-);
   return Vector2Angle((Vector2){.x = 1, .y = 0},
                       (Vector2){.x = delta_x, .y = delta_y});
 }
@@ -162,7 +159,6 @@ int main(void) {
   InitRodsMenu(rodsMenu);
   int display = GetCurrentMonitor();
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
-  printf("HEY I'M FULLSCREE ? %d\n", IsWindowFullscreen());
   ToggleFullscreen();
 
   float time;
@@ -199,7 +195,6 @@ int main(void) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
-      printf("%d\n", compute_angle(dx, dy));
     }
 
     // Draw menu
