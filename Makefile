@@ -438,7 +438,7 @@ run:
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
-		$(PROJECT_NAME)
+		DISPLAY=:0 $(PROJECT_NAME)
     endif
     ifeq ($(PLATFORM_OS),LINUX)
 		./$(PROJECT_NAME)
@@ -489,9 +489,7 @@ clean_shell_cmd:
 
 update:
 	git pull
-	$(MAKE)
-
 
 update_and_run:
 	$(MAKE) update
-	DISPLAY=:0 $(MAKE) run
+	$(MAKE) run
