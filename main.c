@@ -52,6 +52,9 @@ int compute_speed(int delta_x, int delta_y, int *old_time) {
 }
 
 int compute_angle(int delta_x, int delta_y) {
+  printf("%f", Vector2Angle((Vector2){.x = 1, .y = 0},
+                      (Vector2){.x = delta_x, .y = delta_y})
+);
   return Vector2Angle((Vector2){.x = 1, .y = 0},
                       (Vector2){.x = delta_x, .y = delta_y});
 }
