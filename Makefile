@@ -438,10 +438,10 @@ run:
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
-		DISPLAY=:0 $(PROJECT_NAME)
+		$(PROJECT_NAME)
     endif
     ifeq ($(PLATFORM_OS),LINUX)
-		./$(PROJECT_NAME)
+		.DISPLAY=:0 /$(PROJECT_NAME)
     endif
     ifeq ($(PLATFORM_OS),OSX)
 		./$(PROJECT_NAME)
