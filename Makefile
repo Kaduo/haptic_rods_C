@@ -441,7 +441,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 		$(PROJECT_NAME)
     endif
     ifeq ($(PLATFORM_OS),LINUX)
-		.DISPLAY=:0 /$(PROJECT_NAME)
+		DISPLAY=:0 ./$(PROJECT_NAME)
     endif
     ifeq ($(PLATFORM_OS),OSX)
 		./$(PROJECT_NAME)
