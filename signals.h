@@ -36,4 +36,5 @@ void clear_signal(int fd);
 void play_signal(int fd, int play);
 void ping(int fd);
 void set_direction(int fd, int8_t angle, int16_t speed);
+void add_signal(int fd, int8_t angle, int8_t pulses, Signal signal);
 #endif // SIGNALS_H_

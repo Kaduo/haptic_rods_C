@@ -82,6 +82,13 @@ int main(void) {
   /* ping(fd); */
   set_direction(fd, 0, 300);
 
+  Signal s = signal_new(SINE, 127, 0, 0, 30, 0);
+  set_signal(fd, -1, -1, s);
+  sleep(30);
+  Signal s2 = signal_new(SINE, 127, 0, 0, 30, 3);
+  add_signal(fd, -1, -1, s2);
+  sleep(30);
+  add_signal(fd, -1, -1, s2)
   /*   unsigned char buf[2]; */
   /*   int rdlen; */
 
