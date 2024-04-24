@@ -86,7 +86,7 @@ int main(void) {
   set_signal(fd, -1, -1, s);
   sleep(30);
   printf("switch!\n");
-  Signal s2 = signal_new(SINE, 255, 0, 0, 50, 3);
+  Signal s2 = signal_new(SINE, 255, 0, 0, 10, 3);
   add_signal(fd, -1, -1, s2);
   sleep(30);
   printf("switch!\n");
