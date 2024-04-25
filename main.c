@@ -130,8 +130,8 @@ int main(void) {
     return (EXIT_FAILURE);
   }
 
-  double *l = NULL;
-  te_variable vars[] = {{"l", l}};
+  double l;
+  te_variable vars[] = {{"l", &l}};
 
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
@@ -154,7 +154,8 @@ int main(void) {
   Signal signals[NB_RODS_MENU];
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
-    *l = i;
+    l = i;
+    printf("already ?");
     double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
     printf("hello world");
     double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
