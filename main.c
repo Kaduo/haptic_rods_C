@@ -140,7 +140,7 @@ int main(void) {
   printf("ueh\n");
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
   printf("heere!\n");
-  te_expr offset_expr  = get_expr(&cfg, "offset_expr ", vars);
+  te_expr offset_expr  = get_expr(&cfg, "offset_expr", vars);
 
   printf("hmm\n");
   char *signal_parameter_name = "signal";
