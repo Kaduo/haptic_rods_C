@@ -133,11 +133,14 @@ int main(void) {
   double *l = NULL;
   te_variable vars[] = {{"l", l}};
 
+  printf("hi\n");
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
+  printf("ouh\n");
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
   te_expr offset_expr  = get_expr(&cfg, "offset_expr ", vars);
 
+  printf("hmm\n");
   char *signal_parameter_name = "signal";
   const char *signal_name;
   int signal = SINE;
@@ -149,6 +152,7 @@ int main(void) {
       signal = STEADY;
     }
   }
+  printf("eh\n");
 
   Signal signals[NB_RODS_MENU];
   int i;
