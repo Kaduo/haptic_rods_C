@@ -133,16 +133,11 @@ int main(void) {
   double *l = NULL;
   te_variable vars[] = {{"l", l}};
 
-  printf("hi\n");
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
-  printf("ouh\n");
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
-  printf("ueh\n");
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
-  printf("heere!\n");
   te_expr offset_expr  = get_expr(&cfg, "offset_expr", vars);
 
-  printf("hmm\n");
   char *signal_parameter_name = "signal";
   const char *signal_name;
   int signal = SINE;
@@ -161,10 +156,15 @@ int main(void) {
   for (i = 0; i < NB_RODS_MENU; i++) {
     *l = i;
     double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
+    printf("hello world");
     double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
+    printf("houhou");
     double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
+    printf("sdsdf");
     double offset = clamp(te_eval(&offset_expr), 0, 0xFF);
+    printf("oulalala");
     signals[i] = signal_new(signal, amplitude, offset, duty, period, 0);
+    printf("wwtf");
   }
 
   int selected = -1;
