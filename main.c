@@ -76,12 +76,12 @@ config_t read_config(bool *err) {
   return cfg;
 }
 
-te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars[]) {
+te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars) {
   const te_expr *expr = 0;
   const char *string_expr;
   int err = 0;
   if (config_lookup_string(cfg, expr_name, &string_expr)) {
-    expr = te_compile(string_expr, *vars, 1, &err);
+    expr = te_compile(string_expr, vars, 1, &err);
   }
   return *expr;
 }
@@ -130,13 +130,13 @@ int main(void) {
     return (EXIT_FAILURE);
   }
 
-  double l;
-  te_variable vars[] = {{"l", &l}};
+  double *l = NULL;
+  te_variable vars[] = {{"l", l}};
 
-  te_expr period_expr = get_expr(&cfg, "period_expr", &vars);
-  te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", &vars);
-  te_expr duty_expr = get_expr(&cfg, "duty_expr", &vars);
-  te_expr offset_expr  = get_expr(&cfg, "offset_expr ", &vars);
+  te_expr period_expr = get_expr(&cfg, "period_expr", vars);
+  te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
+  te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
+  te_expr offset_expr  = get_expr(&cfg, "offset_expr ", vars);
 
   char *signal_parameter_name = "signal";
   const char *signal_name;
@@ -153,7 +153,7 @@ int main(void) {
   Signal signals[NB_RODS_MENU];
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
-    l = i;
+    *l = i;
     double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
     double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
     double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
