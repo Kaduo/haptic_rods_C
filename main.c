@@ -137,7 +137,9 @@ int main(void) {
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   printf("ouh\n");
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
+  printf("ueh\n");
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
+  printf("heere!\n");
   te_expr offset_expr  = get_expr(&cfg, "offset_expr ", vars);
 
   printf("hmm\n");
