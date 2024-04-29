@@ -8,9 +8,9 @@
 #include <libconfig.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <string.h>
 
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 30;
@@ -136,7 +136,7 @@ int main(void) {
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
-  te_expr offset_expr  = get_expr(&cfg, "offset_expr", vars);
+  te_expr offset_expr = get_expr(&cfg, "offset_expr", vars);
 
   char *signal_parameter_name = "signal";
   const char *signal_name;
@@ -144,28 +144,26 @@ int main(void) {
   if (config_lookup_string(&cfg, signal_parameter_name, &signal_name)) {
     if (strcmp(signal_name, "sine") == 0) {
       signal = SINE;
-
     } else if (strcmp(signal_name, "steady") == 0) {
       signal = STEADY;
+    } else if (strcmp(signal_name, "triangle") == 0) {
+      signal = TRIANGLE;
+    } else if (strcmp(signal_name, "front teeth") == 0) {
+      signal = FRONT_TEETH;
+    } else if (strcmp(signal_name, "back teeth") == 0) {
+      signal = BACK_TEETH;
     }
   }
-  printf("eh\n");
 
   Signal signals[NB_RODS_MENU];
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
     l = i;
-    printf("already ?");
     double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
-    printf("hello world");
     double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
-    printf("houhou");
     double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
-    printf("sdsdf");
     double offset = clamp(te_eval(&offset_expr), 0, 0xFF);
-    printf("oulalala");
     signals[i] = signal_new(signal, amplitude, offset, duty, period, 0);
-    printf("wwtf");
   }
 
   int selected = -1;
@@ -209,8 +207,20 @@ int main(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
       float dx = mousePosition.x + deltaX - rodsMenu[selected].rect.x;
       float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
+      float old_x = rodsMenu[selected].rect.x;
+      float old_y = rodsMenu[selected].rect.y;
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
+      for (i = 0; i < NB_RODS_MENU; i++) {
+
+        if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
+            i != selected) {
+
+          rodsMenu[selected].rect.x = old_x;
+          rodsMenu[selected].rect.y = old_y;
+          break;
+        }
+      }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
