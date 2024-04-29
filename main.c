@@ -220,10 +220,13 @@ int main(void) {
           rodsMenu[selected].rect.y = old_y;
           Signal signal_stop = signals[selected];
           signal_stop.offset = 0;
-          clear_signal(fd);
-          add_signal(fd, -1, -1, signal_stop);
+          set_signal(fd, -1, -1, signal_stop);
+          collided = true;
           break;
         }
+      }
+      if (!collided) {
+        set_signal(fd, -1, -1, signals[i]);
       }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
