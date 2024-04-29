@@ -221,7 +221,7 @@ int main(void) {
           rodsMenu[selected].rect.y = old_y;
           Signal signal_stop = signals[selected];
           signal_stop.offset = 0;
-          set_signal(fd, -1, -1, signal_stop);
+          clear_signal(fd);
           collided = true;
           break;
         }
