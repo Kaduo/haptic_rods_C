@@ -205,6 +205,7 @@ int main(void) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
+      bool collided = false;
       float dx = mousePosition.x + deltaX - rodsMenu[selected].rect.x;
       float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
       float old_x = rodsMenu[selected].rect.x;
