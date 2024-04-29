@@ -218,6 +218,10 @@ int main(void) {
 
           rodsMenu[selected].rect.x = old_x;
           rodsMenu[selected].rect.y = old_y;
+          Signal signal_stop = signals[selected];
+          signal_stop.offset = 0;
+          clear_signal(fd);
+          add_signal(fd, -1, -1, signal_stop);
           break;
         }
       }
