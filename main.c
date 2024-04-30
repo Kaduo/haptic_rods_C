@@ -186,8 +186,9 @@ int main(void) {
   }
 
   int per_rod;
-  config_lookup_bool(&cfg, "per_rod", &per_rod);
+  int success = config_lookup_bool(&cfg, "per_rod", &per_rod);
   printf("\n\nWOULOULOU %d\n\n\n", per_rod);
+  printf("AIAIAII %d\n\n\n", success);
 
   if (per_rod) {
     printf("HIHIHIHII\n\n\n");
