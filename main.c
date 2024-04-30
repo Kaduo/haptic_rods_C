@@ -282,7 +282,9 @@ int main(void) {
         }
       }
       if (!collided) {
-        set_signal(fd, -1, -1, signals[selected]);
+        add_signal(fd, -1, -1, signals[selected]);
+        play_signal(fd, 1);
+        //set_signal(fd, -1, -1, signals[selected]);
       }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
