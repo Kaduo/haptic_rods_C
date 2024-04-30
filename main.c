@@ -195,7 +195,7 @@ int main(void) {
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
       if (setting != NULL) {
-        printf("hello world");
+        printf("\n\nhello world\n\n");
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
           signals[i].period = clamp(period, 0, 0xFFFF);
