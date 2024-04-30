@@ -51,7 +51,7 @@ int compute_speed(float delta_x, float delta_y, float *old_time) {
     speed = 1000;
   }
   *old_time = new_time;
-  return speed;
+  return abs(speed);
 }
 
 int compute_angle(float delta_x, float delta_y) {
