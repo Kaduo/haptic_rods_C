@@ -204,6 +204,7 @@ int main(void) {
           signals[i].period = clamp(period, 0, 0xFFFF);
         }
         double amplitude = get_per_rod_setting(setting, "amplitude");
+        printf("my favorite amplitude : %f\n", amplitude);
         if (amplitude != PARAMETER_NOT_SET) {
           printf("\n\n amplitude has been set!\n\n\n");
           signals[i].amplitude = clamp(amplitude, 0, 0xFF);
