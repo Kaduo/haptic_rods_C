@@ -189,7 +189,7 @@ int main(void) {
   config_lookup_bool(&cfg, "per_rod", &per_rod);
   printf("%d", per_rod);
 
-  if (*per_rod) {
+  if (per_rod) {
     printf("HIHIHIHII\n\n\n");
     char *rod_names[] = {"r1", "r2", "r3", "r4", "r5",
                          "r6", "r7", "r8", "r9", "r10"};
