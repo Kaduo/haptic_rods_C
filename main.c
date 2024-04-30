@@ -185,34 +185,33 @@ int main(void) {
     signals[i] = signal_new(signal, amplitude, offset, duty, period, 0);
   }
 
-  int per_rod;
-  int success = config_lookup_bool(&cfg, "per_rod", &per_rod);
-  printf("\n\nWOULOULOU %d\n\n\n", per_rod);
-  printf("AIAIAII %d\n\n\n", success);
+  int per_rod = 0;
+  config_lookup_bool(&cfg, "per_rod", &per_rod);
 
   if (per_rod) {
-    printf("HIHIHIHII\n\n\n");
     char *rod_names[] = {"r1", "r2", "r3", "r4", "r5",
                          "r6", "r7", "r8", "r9", "r10"};
     int i;
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
+
       if (setting != NULL) {
-        printf("\n\nhello world\n\n");
+
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
           signals[i].period = clamp(period, 0, 0xFFFF);
         }
+
         double amplitude = get_per_rod_setting(setting, "amplitude");
-        printf("my favorite amplitude : %f\n", amplitude);
         if (amplitude != PARAMETER_NOT_SET) {
-          printf("\n\n amplitude has been set!\n\n\n");
           signals[i].amplitude = clamp(amplitude, 0, 0xFF);
         }
+
         double offset = get_per_rod_setting(setting, "offset");
         if (offset != PARAMETER_NOT_SET) {
           signals[i].offset = clamp(offset, 0, 0xFF);
         }
+
         double duty = get_per_rod_setting(setting, "duty");
         if (duty != PARAMETER_NOT_SET) {
           signals[i].duty = clamp(duty, 0, 0xFF);
@@ -235,6 +234,7 @@ int main(void) {
   time = 0;
   // Main loop
   while (!WindowShouldClose()) {
+    printf("%d\n", GetFPS());
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
