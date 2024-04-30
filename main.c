@@ -62,10 +62,10 @@ double clamp(double d, double min, double max) {
   return t > max ? max : t;
 }
 
-config_t read_config(bool *err) {
+config_t read_config(bool *err, char *config_name) {
   config_t cfg;
   config_init(&cfg);
-  if (!config_read_file(&cfg, "config.cfg")) {
+  if (!config_read_file(&cfg, config_name)) {
     fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
             config_error_line(&cfg), config_error_text(&cfg));
     config_destroy(&cfg);
@@ -86,15 +86,24 @@ te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars) {
   return *expr;
 }
 
+const double PARAMETER_NOT_SET = -10;
+
+double get_per_rod_setting(config_setting_t *setting, char *expr_name) {
+  const char *string_expr;
+  int err = 0;
+  if (config_setting_lookup_string(setting, expr_name, &string_expr)) {
+    return te_interp(string_expr, &err);
+  } else {
+    return PARAMETER_NOT_SET;
+  }
+}
+
 double is_len(double a, double b) {
   if (a == b) {
     return 1;
   }
   return 0;
 }
-
-  double l;
-  te_variable vars[] = {{"l", &l}, {"is", is_len, TE_FUNCTION2}};
 
 int main(void) {
   int fd;
@@ -135,10 +144,13 @@ int main(void) {
   /*   } */
 
   bool config_error = false;
-  config_t cfg = read_config(&config_error);
+  config_t cfg = read_config(&config_error, "config.cfg");
   if (config_error) {
     return (EXIT_FAILURE);
   }
+
+  double l;
+  te_variable vars[] = {{"l", &l}};
 
 
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
@@ -172,6 +184,35 @@ int main(void) {
     double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
     double offset = clamp(te_eval(&offset_expr), 0, 0xFF);
     signals[i] = signal_new(signal, amplitude, offset, duty, period, 0);
+  }
+
+  int per_rod;
+  config_lookup_bool(&cfg, "per_rod", &per_rod);
+
+  if (per_rod) {
+    char *rod_names[] = {"r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"};
+    int i;
+    for (i=0; i<10; i++) {
+      config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
+      if (setting != NULL) {
+        double period = get_per_rod_setting(setting, "period");
+        if (period != PARAMETER_NOT_SET) {
+          signals[i].period = clamp(period, 0, 0xFFFF);
+        }
+        double amplitude = get_per_rod_setting(setting, "amplitude");
+        if (amplitude != PARAMETER_NOT_SET) {
+          signals[i].amplitude = clamp(amplitude, 0, 0xFF);
+        }
+        double offset = get_per_rod_setting(setting, "offset");
+        if (offset != PARAMETER_NOT_SET) {
+          signals[i].offset = clamp(offset, 0, 0xFF);
+        }
+        double duty = get_per_rod_setting(setting, "duty");
+        if (duty != PARAMETER_NOT_SET) {
+          signals[i].duty = clamp(duty, 0, 0xFF);
+        }
+      }
+    }
   }
 
   int selected = -1;
