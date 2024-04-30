@@ -110,7 +110,7 @@ int main(void) {
   fd = connect_to_tty();
 
   /* ping(fd); */
-  set_direction(fd, 0, 300);
+  //set_direction(fd, 0, 300);
 
   /* Signal s = signal_new(SINE, 127, 0, 0, 10, 0); */
   /* set_signal(fd, -1, -1, s); */
