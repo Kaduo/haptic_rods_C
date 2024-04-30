@@ -86,8 +86,8 @@ te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars) {
   return *expr;
 }
 
-double is_len(double l, double c) {
-  if (l == c) {
+double is_len(double a, double b) {
+  if (a == b) {
     return 1;
   }
   return 0;
