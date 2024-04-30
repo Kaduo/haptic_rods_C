@@ -284,6 +284,7 @@ int main(void) {
         set_signal(fd, -1, -1, signals[selected]);
       }
       printf("Speed : %d\n", compute_speed(dx, dy, &time));
+      printf("angle : %d\n", compute_angle(dx, dy));
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
