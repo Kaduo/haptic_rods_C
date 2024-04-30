@@ -252,6 +252,14 @@ int main(void) {
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
           set_signal(fd, -1, -1, signals[i]);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
+          play_signal(fd, 1);
           break;
         }
       }
@@ -284,7 +292,7 @@ int main(void) {
       if (!collided) {
         /* clear_signal(fd); */
         /* add_signal(fd, -1, -1, signals[selected]); */
-        play_signal(fd, 0);
+        /* play_signal(fd, 1); */
         //set_signal(fd, -1, -1, signals[selected]);
       }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
