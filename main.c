@@ -220,6 +220,9 @@ int main(void) {
     }
   }
 
+  set_signal(fd, -1, -1, signals[0]);
+  return 0;
+
   int selected = -1;
   int deltaX = 0;
   int deltaY = 0;
