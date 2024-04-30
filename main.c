@@ -86,6 +86,13 @@ te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars) {
   return *expr;
 }
 
+double is_len(double l, double c) {
+  if (l == c) {
+    return 1;
+  }
+  return 0;
+}
+
 int main(void) {
   int fd;
   fd = connect_to_tty();
@@ -131,7 +138,7 @@ int main(void) {
   }
 
   double l;
-  te_variable vars[] = {{"l", &l}};
+  te_variable vars[] = {{"l", &l}, {"is", is_len, TE_FUNCTION2}};
 
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
