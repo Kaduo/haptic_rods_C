@@ -234,8 +234,6 @@ int main(void) {
   time = 0;
   // Main loop
   while (!WindowShouldClose()) {
-    printf("%d\n", GetFPS());
-    SetTargetFPS(10);
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
