@@ -205,6 +205,7 @@ int main(void) {
         }
         double amplitude = get_per_rod_setting(setting, "amplitude");
         if (amplitude != PARAMETER_NOT_SET) {
+          printf("\n\n amplitude has been set!\n\n\n");
           signals[i].amplitude = clamp(amplitude, 0, 0xFF);
         }
         double offset = get_per_rod_setting(setting, "offset");
