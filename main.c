@@ -152,7 +152,6 @@ int main(void) {
   double l;
   te_variable vars[] = {{"l", &l}};
 
-
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
@@ -190,11 +189,13 @@ int main(void) {
   config_lookup_bool(&cfg, "per_rod", &per_rod);
 
   if (per_rod) {
-    char *rod_names[] = {"r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"};
+    char *rod_names[] = {"r1", "r2", "r3", "r4", "r5",
+                         "r6", "r7", "r8", "r9", "r10"};
     int i;
-    for (i=0; i<10; i++) {
+    for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
       if (setting != NULL) {
+        printf("hello world");
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
           signals[i].period = clamp(period, 0, 0xFFFF);
