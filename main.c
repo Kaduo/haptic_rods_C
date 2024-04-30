@@ -41,6 +41,8 @@ void InitRodsMenu(Rod rodsMenu[]) {
 
 int compute_speed(float delta_x, float delta_y, float *old_time) {
   int new_time = GetFrameTime();
+  printf("new_time : %d", new_time);
+  printf("old_time : %f", *old_time);
   int speed;
   if ((*old_time != 0) && (new_time - *old_time != 0)) {
     speed = Vector2Length((Vector2){.x = delta_x, .y = delta_y}) /
