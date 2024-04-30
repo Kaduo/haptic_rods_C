@@ -93,6 +93,9 @@ double is_len(double a, double b) {
   return 0;
 }
 
+  double l;
+  te_variable vars[] = {{"l", &l}, {"is", is_len, TE_FUNCTION2}};
+
 int main(void) {
   int fd;
   fd = connect_to_tty();
@@ -137,8 +140,6 @@ int main(void) {
     return (EXIT_FAILURE);
   }
 
-  double l;
-  te_variable vars[] = {{"l", &l}, {"is", is_len, TE_FUNCTION2}};
 
   te_expr period_expr = get_expr(&cfg, "period_expr", vars);
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
