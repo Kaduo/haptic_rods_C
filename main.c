@@ -284,7 +284,7 @@ int main(void) {
       if (!collided) {
         /* clear_signal(fd); */
         /* add_signal(fd, -1, -1, signals[selected]); */
-        play_signal(fd, 1);
+        play_signal(fd, 0);
         //set_signal(fd, -1, -1, signals[selected]);
       }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
