@@ -105,50 +105,7 @@ double is_len(double a, double b) {
   return 0;
 }
 
-int main(void) {
-  int fd;
-  fd = connect_to_tty();
-
-  /* ping(fd); */
-  //set_direction(fd, 0, 300);
-
-  /* Signal s = signal_new(SINE, 127, 0, 0, 10, 0); */
-  /* set_signal(fd, -1, -1, s); */
-  /* sleep(5); */
-  /* printf("switch!\n"); */
-  /* Signal s2 = signal_new(SINE, 127, 0, 0, 10, 3); */
-  /* add_signal(fd, -1, -1, s2); */
-  /* sleep(5); */
-  /* printf("switch!\n"); */
-  /* add_signal(fd, -1, -1, s2); */
-
-  /*   unsigned char buf[2]; */
-  /*   int rdlen; */
-
-  /*   rdlen = read(fd, buf, sizeof(buf) - 1); */
-  /*   if (rdlen > 0) { */
-  /* #ifdef DISPLAY_STRING */
-  /*     buf[rdlen] = 0; */
-  /*     printf("Read %d: \"%s\"\n", rdlen, buf); */
-  /* #else /\* display hex *\/ */
-  /*     unsigned char *p; */
-  /*     printf("Read %d:", rdlen); */
-  /*     for (p = buf; rdlen-- > 0; p++) */
-  /*       printf(" 0x%x", *p); */
-  /*     printf("\n"); */
-  /* #endif */
-  /*   } else if (rdlen < 0) { */
-  /*     printf("Error from read: %d: %s\n", rdlen, strerror(errno)); */
-  /*   } else { /\* rdlen == 0 *\/ */
-  /*     printf("Timeout from read\n"); */
-  /*   } */
-
-  bool config_error = false;
-  config_t cfg = read_config(&config_error, "config.cfg");
-  if (config_error) {
-    return (EXIT_FAILURE);
-  }
-
+void generate_signals(config_t cfg, Signal *buf, int count) {
   double l;
   te_variable vars[] = {{"l", &l}};
 
@@ -156,6 +113,7 @@ int main(void) {
   te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
   te_expr offset_expr = get_expr(&cfg, "offset_expr", vars);
+
 
   char *signal_parameter_name = "signal";
   const char *signal_name;
@@ -174,15 +132,14 @@ int main(void) {
     }
   }
 
-  Signal signals[NB_RODS_MENU];
   int i;
-  for (i = 0; i < NB_RODS_MENU; i++) {
+  for (i = 0; i < count; i++) {
     l = i;
     double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
     double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
     double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
     double offset = clamp(te_eval(&offset_expr), 0, 0xFF);
-    signals[i] = signal_new(signal, amplitude, offset, duty, period, 0);
+    buf[i] = signal_new(signal, amplitude, offset, duty, period, 0);
   }
 
   int per_rod = 0;
@@ -199,29 +156,44 @@ int main(void) {
 
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
-          signals[i].period = clamp(period, 0, 0xFFFF);
+          buf[i].period = clamp(period, 0, 0xFFFF);
         }
 
         double amplitude = get_per_rod_setting(setting, "amplitude");
         if (amplitude != PARAMETER_NOT_SET) {
-          signals[i].amplitude = clamp(amplitude, 0, 0xFF);
+          buf[i].amplitude = clamp(amplitude, 0, 0xFF);
         }
 
         double offset = get_per_rod_setting(setting, "offset");
         if (offset != PARAMETER_NOT_SET) {
-          signals[i].offset = clamp(offset, 0, 0xFF);
+          buf[i].offset = clamp(offset, 0, 0xFF);
         }
 
         double duty = get_per_rod_setting(setting, "duty");
         if (duty != PARAMETER_NOT_SET) {
-          signals[i].duty = clamp(duty, 0, 0xFF);
+          buf[i].duty = clamp(duty, 0, 0xFF);
         }
       }
     }
   }
 
-  //set_signal(fd, -1, -1, signals[0]);
-  //return 0;
+}
+
+int main(void) {
+  int fd;
+  fd = connect_to_tty();
+
+  double times[100]; //FIXME
+  Vector2 positions[100];
+
+  bool config_error = false;
+  config_t cfg = read_config(&config_error, "config.cfg");
+  if (config_error) {
+    return (EXIT_FAILURE);
+  }
+
+  Signal signals[NB_RODS_MENU];
+  generate_signals(cfg, signals, NB_RODS_MENU);
 
   int selected = -1;
   int deltaX = 0;
@@ -235,6 +207,8 @@ int main(void) {
 
   float time;
   time = 0;
+  int j = 0;
+  int i = 0;
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -245,6 +219,9 @@ int main(void) {
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       int i;
+      times[j] = GetTime();
+      positions[j] = mousePosition;
+      j++;
       for (i = 0; i < NB_RODS_MENU; i++) {
         if (CheckCollisionPointRec(mousePosition, rodsMenu[i].rect)) {
           selected = i;
