@@ -176,7 +176,6 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
       }
     }
   }
-
 }
 
 int main(void) {
@@ -208,7 +207,8 @@ int main(void) {
   float time;
   time = 0;
   int j = 0;
-  int i = 0;
+  int i;
+
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -218,7 +218,6 @@ int main(void) {
 
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      int i;
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
