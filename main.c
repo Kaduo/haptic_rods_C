@@ -31,11 +31,11 @@ void DrawRods(Rod rods[], int nbRods) {
   }
 }
 
-void InitRodsMenu(Rod rodsMenu[], int width, int height) {
+void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   int i;
-  for (i = 0; i < NB_RODS_MENU; i++) {
+  for (i = shift; i < 10; i++) {
     rodsMenu[i] =
-        (Rod){.rect = {0, i * ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+        (Rod){.rect = {shift, i * ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i]};
   }
 }
@@ -204,9 +204,11 @@ int main(void) {
   int deltaX = 0;
   int deltaY = 0;
 
-  Rod rodsMenu[NB_RODS_MENU];
+  Rod rodsMenu[NB_RODS_MENU*3];
   int display = GetCurrentMonitor();
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display));
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 0);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 11*UNIT_ROD_WIDTH);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display) 22*UNIT_ROD_WIDTH);
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
@@ -224,9 +226,6 @@ int main(void) {
     Vector2 mousePosition = GetMousePosition();
 
     // Selection logic
-          printf("%d\n", collision_frame_count);
-      printf(" hi ");
-
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       times[j] = GetTime();
       positions[j] = mousePosition;
