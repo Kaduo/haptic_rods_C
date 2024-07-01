@@ -181,6 +181,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
 int main(void) {
   int fd;
   fd = connect_to_tty();
+  int collision_frame_count = 0;
 
   double times[100]; //FIXME
   Vector2 positions[100];
@@ -261,15 +262,19 @@ int main(void) {
           set_signal(fd, -1, -1, sig);
           play_signal(fd, 1);
           collided = true;
+          collision_frame_count = 100;
           break;
         }
       }
-      if (!collided) {
-        /* clear_signal(fd); */
-        /* add_signal(fd, -1, -1, signals[selected]); */
-        play_signal(fd, 1);
-        //set_signal(fd, -1, -1, signals[selected]);
+      sig = signals[selected];
+      if collision_frame_count > 0 {
+        collision_frame_count -= 1;
+        sig.offset = 255;
       }
+      /* clear_signal(fd); */
+      /* add_signal(fd, -1, -1, signals[selected]); */
+      set_signal(fd, -1, -1, sig);
+      play_signal(fd, 1);
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
