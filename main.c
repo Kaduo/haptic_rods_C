@@ -288,7 +288,7 @@ int main(void) {
           collided = true;
           collision_frame_count = 100;
 
-          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) {
+          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)) {
             rodsMenu[selected].rect.x = old_x;
             rodsMenu[selected].rect.y = old_y;
 
