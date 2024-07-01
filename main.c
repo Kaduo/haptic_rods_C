@@ -261,7 +261,7 @@ int main(void) {
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
 
-          if (CollisionTopToBottom(rect1, rect2) {
+          if (CollisionTopToBottom(rect1, rect2)) {
             if (rect1.y < rect2.y) {
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
             } else {
