@@ -41,7 +41,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
 }
 
 bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
-  return ( rect2.x <= rect1.x <= rect2.x + rect2.width) || (rect2.x <= rect1.x + rect1.width <= rect2.x + rect2.width);
+  return ( rect2.x < rect1.x < rect2.x + rect2.width) || (rect2.x < rect1.x + rect1.width < rect2.x + rect2.width);
 }
 
 int compute_speed(float delta_x, float delta_y, float *old_time) {
