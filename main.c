@@ -253,7 +253,13 @@ int main(void) {
 
           rodsMenu[selected].rect.x = old_x;
           rodsMenu[selected].rect.y = old_y;
+
+          Signal sig = signals[selected]
+          sig.offset = 0;
+
           clear_signal(fd);
+          set_signal(fd, -1, -1, sig);
+          play_signal(fd, 1);
           collided = true;
           break;
         }
