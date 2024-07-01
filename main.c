@@ -218,7 +218,6 @@ int main(void) {
 
   // Main loop
   while (!WindowShouldClose()) {
-    printf("%d", collision_frame_count);
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
@@ -226,6 +225,8 @@ int main(void) {
 
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      printf("%d\n", collision_frame_count);
+      printf(" hi ")
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
