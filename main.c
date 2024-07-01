@@ -262,14 +262,14 @@ int main(void) {
             i != selected) {
 
           if (CollisionTopToBottom(rect1, rect2)) {
-            if (rect1.y < rect2.y) {
+            if (rect1.y - rect1.height < rect2.y) {
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
             } else {
                 rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT;
 
             }
           } else {
-            if (rect1.x < rect2.x) {
+            if (rect1.x - rect1.width < rect2.x) {
               rodsMenu[selected].rect.x = rect2.x - rect1.width;
             } else {
                 rodsMenu[selected].rect.x = rect2.x + rect2.width;
