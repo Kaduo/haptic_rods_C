@@ -309,7 +309,7 @@ int main(void) {
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         if (collision_frame_count == 0) {
-          set_signal(fd, -1, -1, signals[selected])
+          set_signal(fd, -1, -1, signals[selected]);
         }
       }
       // /* clear_signal(fd); */
