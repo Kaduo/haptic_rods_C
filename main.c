@@ -205,7 +205,7 @@ int main(void) {
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
 
-  float time;g
+  float time;
   time = 0;
   int j = 0;
   int i;
