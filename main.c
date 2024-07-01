@@ -226,7 +226,7 @@ int main(void) {
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       printf("%d\n", collision_frame_count);
-      printf(" hi ")
+      printf(" hi ");
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
