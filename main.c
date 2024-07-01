@@ -262,7 +262,7 @@ int main(void) {
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
 
-          if (CollisionTopToBottom(rect1, rect2)) {
+          if (CollisionTopToBottom(rect1, rect2) || CollisionTopToBottom(rect2, rect1)) {
             printf("ft");
             if (rect1.y < rect2.y) {
               printf("1\n");
