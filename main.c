@@ -35,13 +35,14 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
     rodsMenu[i] =
-        (Rod){.rect = {0, i*ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+        (Rod){.rect = {0, i * ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i]};
   }
 }
 
 bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
-  return ( rect2.x < rect1.x < rect2.x + rect2.width) || (rect2.x < rect1.x + rect1.width < rect2.x + rect2.width);
+  return (rect2.x < rect1.x < rect2.x + rect2.width) ||
+         (rect2.x < rect1.x + rect1.width < rect2.x + rect2.width);
 }
 
 int compute_speed(float delta_x, float delta_y, float *old_time) {
@@ -119,7 +120,6 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
   te_expr offset_expr = get_expr(&cfg, "offset_expr", vars);
 
-
   char *signal_parameter_name = "signal";
   const char *signal_name;
   int signal = SINE;
@@ -188,7 +188,7 @@ int main(void) {
   fd = connect_to_tty();
   int collision_frame_count = 0;
 
-  double times[100]; //FIXME
+  double times[100]; // FIXME
   Vector2 positions[100];
 
   bool config_error = false;
@@ -262,20 +262,26 @@ int main(void) {
             i != selected) {
 
           if (CollisionTopToBottom(rect1, rect2)) {
+            printf("ft");
             if (rect1.y - rect1.height < rect2.y) {
+              printf("1\n");
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
             } else {
-                rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT;
+              printf("2\n");
 
+              rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT;
             }
           } else {
+            printf("ha");
             if (rect1.x - rect1.width < rect2.x) {
+              printf("1\n");
+
               rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
-                rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
+              printf("2\n");
 
+              rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
             }
-
           }
 
           Signal sig = signals[selected];
