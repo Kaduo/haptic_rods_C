@@ -266,7 +266,7 @@ int main(void) {
           break;
         }
       }
-      sig = signals[selected];
+      Signal sig = signals[selected];
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         sig.offset = 255;
