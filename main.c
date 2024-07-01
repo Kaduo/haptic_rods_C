@@ -208,7 +208,7 @@ int main(void) {
   int display = GetCurrentMonitor();
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 0);
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 11*UNIT_ROD_WIDTH);
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display) 22*UNIT_ROD_WIDTH);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 22*UNIT_ROD_WIDTH);
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
