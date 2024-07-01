@@ -281,7 +281,7 @@ int main(void) {
             }
           }
 
-          Signal sig = signals[selected % NB_RODS_MENU];
+          Signal sig = {STEADY, 255,255,0,0,0};
           sig.offset = 0;
 
           set_signal(fd, -1, -1, sig);
