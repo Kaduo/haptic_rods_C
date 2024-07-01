@@ -254,7 +254,7 @@ int main(void) {
           rodsMenu[selected].rect.x = old_x;
           rodsMenu[selected].rect.y = old_y;
 
-          Signal sig = signals[selected]
+          Signal sig = signals[selected];
           sig.offset = 0;
 
           clear_signal(fd);
