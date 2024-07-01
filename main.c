@@ -270,9 +270,9 @@ int main(void) {
             }
           } else {
             if (rect1.x - rect1.width < rect2.x) {
-              rodsMenu[selected].rect.x = rect2.x - rect1.width;
+              rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
-                rodsMenu[selected].rect.x = rect2.x + rect2.width;
+                rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
 
             }
 
