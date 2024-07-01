@@ -319,7 +319,7 @@ int main(void) {
     }
 
     // Draw menu
-    DrawRods(rodsMenu, NB_RODS_MENU);
+    DrawRods(rodsMenu, NB_RODS_MENU*3);
 
     EndDrawing();
   }
