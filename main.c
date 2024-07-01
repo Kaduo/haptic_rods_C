@@ -289,7 +289,10 @@ int main(void) {
           set_signal(fd, -1, -1, sig);
           play_signal(fd, 1);
           collided = true;
-          collision_frame_count = 100;
+          if (collision_frame_count == 0) {
+            collision_frame_count = 5;
+
+          }
 
           if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)) {
             rodsMenu[selected].rect.x = old_x;
