@@ -40,6 +40,10 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
   }
 }
 
+bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
+  return ( rect2.x <= rect1.x <= rect2.x + rect2.width) || (rect2.x <= rect1.x + rect1.width <= rect2.x + rect2.width);
+}
+
 int compute_speed(float delta_x, float delta_y, float *old_time) {
   float new_time = GetFrameTime();
   int speed;
@@ -250,11 +254,28 @@ int main(void) {
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
       for (i = 0; i < NB_RODS_MENU; i++) {
 
+        rect1 = rodsMenu[selected].rect;
+        rect2 = rodsMenu[i].rect;
+
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
 
-          rodsMenu[selected].rect.x = old_x;
-          rodsMenu[selected].rect.y = old_y;
+          if (CollisionTopToBottom(rodsMenu[selected].rect, rodsMenu[i].rect)) {
+            if (rect1.y < rect2.y) {
+              rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
+            } else {
+                rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT;
+
+            }
+          } else {
+            if (rect1.x < rect2.x) {
+              rodsMenu[selected].rect.x = rect2.x - rect1.width;
+            } else {
+                rodsMenu[selected].rect.x = rect2.x + rect2.width;
+
+            }
+
+          }
 
           Signal sig = signals[selected];
           sig.offset = 0;
