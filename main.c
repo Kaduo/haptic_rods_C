@@ -236,7 +236,7 @@ int main(void) {
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
-          set_signal(fd, -1, -1, signals[i]);
+          set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
         }
       }
