@@ -254,6 +254,9 @@ int main(void) {
 
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
+      printf("hey : %d ", old_x);
+      printf(" ho : %d", rect1.x);
+      printf(" huh : %d", rodsMenu[selected].rect.x);
       for (i = 0; i < NB_RODS_MENU; i++) {
 
         Rectangle rect2 = rodsMenu[i].rect;
