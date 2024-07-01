@@ -230,7 +230,7 @@ int main(void) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
-      for (i = 0; i < NB_RODS_MENU; i++) {
+      for (i = 0; i < NB_RODS_MENU*3; i++) {
         if (CheckCollisionPointRec(mousePosition, rodsMenu[i].rect)) {
           selected = i;
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
@@ -257,7 +257,7 @@ int main(void) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
 
-      for (i = 0; i < NB_RODS_MENU; i++) {
+      for (i = 0; i < NB_RODS_MENU*3; i++) {
 
         Rectangle rect2 = rodsMenu[i].rect;
 
@@ -281,7 +281,7 @@ int main(void) {
             }
           }
 
-          Signal sig = signals[selected];
+          Signal sig = signals[selected % NB_RODS_MENU];
           sig.offset = 0;
 
           clear_signal(fd);
@@ -289,7 +289,7 @@ int main(void) {
           play_signal(fd, 1);
           collided = true;
           if (collision_frame_count == 0) {
-            Signal sig = signals[selected];
+            Signal sig = signals[selected % NB_RODS_MENU];
             collision_frame_count = 5;
             sig.offset = 255;
             set_signal(fd, -1, -1, sig);
@@ -308,7 +308,7 @@ int main(void) {
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         if (collision_frame_count == 0) {
-          set_signal(fd, -1, -1, signals[selected]);
+          set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
         }
       }
       // /* clear_signal(fd); */
