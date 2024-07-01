@@ -284,9 +284,7 @@ int main(void) {
           Signal sig = signals[selected % NB_RODS_MENU];
           sig.offset = 0;
 
-          clear_signal(fd);
           set_signal(fd, -1, -1, sig);
-          play_signal(fd, 1);
           collided = true;
           if (collision_frame_count == 0) {
             Signal sig = signals[selected % NB_RODS_MENU];
@@ -315,7 +313,7 @@ int main(void) {
       // /* add_signal(fd, -1, -1, signals[selected]); */
       // set_signal(fd, -1, -1, sig);
       // play_signal(fd, 1);
-      set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      //set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
     // Draw menu
