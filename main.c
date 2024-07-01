@@ -263,23 +263,17 @@ int main(void) {
             i != selected) {
 
           if (CollisionTopToBottom(rect1, rect2) || CollisionTopToBottom(rect2, rect1)) {
-            printf("ft");
             if (rect1.y < rect2.y) {
-              printf("1\n");
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
-              printf("2\n");
 
               rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
             }
           } else {
-            printf("ha");
             if (rect1.x < rect2.x) {
-              printf("1\n");
 
               rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
-              printf("2\n");
 
               rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
             }
@@ -293,7 +287,13 @@ int main(void) {
           play_signal(fd, 1);
           collided = true;
           collision_frame_count = 100;
-          
+
+          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) {
+            rodsMenu[selected].rect.x = old_x;
+            rodsMenu[selected].rect.y = old_y;
+
+          }
+
         }
       }
       Signal sig = signals[selected];
