@@ -34,7 +34,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
     rodsMenu[i] =
-        (Rod){.rect = {rand() % (width - (i+1)*UNIT_ROD_WIDTH), rand() % (height - ROD_HEIGHT), (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+        (Rod){.rect = {0, i*ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i]};
   }
 }
