@@ -254,8 +254,8 @@ int main(void) {
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
       for (i = 0; i < NB_RODS_MENU; i++) {
 
-        rect1 = rodsMenu[selected].rect;
-        rect2 = rodsMenu[i].rect;
+        Rectangle rect1 = rodsMenu[selected].rect;
+        Rectangle rect2 = rodsMenu[i].rect;
 
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
