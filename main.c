@@ -41,8 +41,8 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
 }
 
 bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
-  return (rect2.x < rect1.x < rect2.x + rect2.width) ||
-         (rect2.x < rect1.x + rect1.width < rect2.x + rect2.width);
+  return (rect2.x + 1 < rect1.x < rect2.x + rect2.width - 1) ||
+         (rect2.x + 1 < rect1.x + rect1.width < rect2.x + rect2.width - 1);
 }
 
 int compute_speed(float delta_x, float delta_y, float *old_time) {
@@ -254,9 +254,7 @@ int main(void) {
 
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
-      printf("hey : %d ", old_x);
-      printf(" ho : %d", rect1.x);
-      printf(" huh : %d", rodsMenu[selected].rect.x);
+
       for (i = 0; i < NB_RODS_MENU; i++) {
 
         Rectangle rect2 = rodsMenu[i].rect;
