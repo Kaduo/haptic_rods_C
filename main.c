@@ -250,17 +250,18 @@ int main(void) {
       float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
       float old_x = rodsMenu[selected].rect.x;
       float old_y = rodsMenu[selected].rect.y;
+      Rectangle rect1 = rodsMenu[selected].rect;
+
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
       for (i = 0; i < NB_RODS_MENU; i++) {
 
-        Rectangle rect1 = rodsMenu[selected].rect;
         Rectangle rect2 = rodsMenu[i].rect;
 
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
 
-          if (CollisionTopToBottom(rodsMenu[selected].rect, rodsMenu[i].rect)) {
+          if (CollisionTopToBottom(rect1, rect2) {
             if (rect1.y < rect2.y) {
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
             } else {
