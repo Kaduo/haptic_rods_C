@@ -267,7 +267,7 @@ int main(void) {
         }
       }
       sig = signals[selected];
-      if collision_frame_count > 0 {
+      if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         sig.offset = 255;
       }
