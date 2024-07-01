@@ -290,7 +290,10 @@ int main(void) {
           play_signal(fd, 1);
           collided = true;
           if (collision_frame_count == 0) {
+            Signal sig = signals[selected];
             collision_frame_count = 5;
+            sig.offset = 255;
+            set_signal(fd, -1, -1, sig);
 
           }
 
@@ -302,15 +305,17 @@ int main(void) {
 
         }
       }
-      Signal sig = signals[selected];
+      // Signal sig = signals[selected];
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
-        sig.offset = 255;
+        if (collision_frame_count == 0) {
+          set_signal(fd, -1, -1, signals[selected])
+        }
       }
-      /* clear_signal(fd); */
-      /* add_signal(fd, -1, -1, signals[selected]); */
-      set_signal(fd, -1, -1, sig);
-      play_signal(fd, 1);
+      // /* clear_signal(fd); */
+      // /* add_signal(fd, -1, -1, signals[selected]); */
+      // set_signal(fd, -1, -1, sig);
+      // play_signal(fd, 1);
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
