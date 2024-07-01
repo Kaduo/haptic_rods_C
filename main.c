@@ -266,22 +266,22 @@ int main(void) {
             printf("ft");
             if (rect1.y < rect2.y) {
               printf("1\n");
-              rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT;
+              rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
               printf("2\n");
 
-              rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT;
+              rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
             }
           } else {
             printf("ha");
             if (rect1.x < rect2.x) {
               printf("1\n");
 
-              rodsMenu[selected].rect.x = rect2.x - rect1.width;
+              rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
               printf("2\n");
 
-              rodsMenu[selected].rect.x = rect2.x + rect2.width;
+              rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
             }
           }
 
