@@ -34,7 +34,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height) {
   int i;
   for (i = 0; i < NB_RODS_MENU; i++) {
     rodsMenu[i] =
-        (Rod){.rect = {rand() % (width - i*UNIT_ROD_WIDTH), rand() % (height - ROD_HEIGHT), (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+        (Rod){.rect = {rand() % (width - (i+1)*UNIT_ROD_WIDTH), rand() % (height - ROD_HEIGHT), (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i]};
   }
 }
@@ -200,12 +200,12 @@ int main(void) {
 
   Rod rodsMenu[NB_RODS_MENU];
   int display = GetCurrentMonitor();
-    InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display));
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display));
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
 
-  float time;
+  float time;g
   time = 0;
   int j = 0;
   int i;
