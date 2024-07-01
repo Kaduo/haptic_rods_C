@@ -224,9 +224,10 @@ int main(void) {
     Vector2 mousePosition = GetMousePosition();
 
     // Selection logic
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      printf("%d\n", collision_frame_count);
+          printf("%d\n", collision_frame_count);
       printf(" hi ");
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
