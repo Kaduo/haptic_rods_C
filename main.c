@@ -277,11 +277,11 @@ int main(void) {
             if (rect1.x - rect1.width < rect2.x) {
               printf("1\n");
 
-              rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
+              rodsMenu[selected].rect.x = rect2.x - rect1.width;
             } else {
               printf("2\n");
 
-              rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
+              rodsMenu[selected].rect.x = rect2.x + rect2.width;
             }
           }
 
