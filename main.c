@@ -33,7 +33,7 @@ void DrawRods(Rod rods[], int nbRods) {
 
 void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   int i;
-  for (i = shift; i < shift+10; i++) {
+  for (i = 0; i < 10; i++) {
     rodsMenu[i] =
         (Rod){.rect = {shift, i * ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i]};
