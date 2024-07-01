@@ -218,6 +218,7 @@ int main(void) {
 
   // Main loop
   while (!WindowShouldClose()) {
+    printf("%d", collision_frame_count);
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
