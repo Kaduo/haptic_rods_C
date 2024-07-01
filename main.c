@@ -293,7 +293,7 @@ int main(void) {
           play_signal(fd, 1);
           collided = true;
           collision_frame_count = 100;
-          break;
+          
         }
       }
       Signal sig = signals[selected];
