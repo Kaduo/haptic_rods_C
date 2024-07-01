@@ -27,7 +27,7 @@ void DrawRods(Rod rods[], int nbRods) {
   int i;
   for (i = 0; i < nbRods; i++) {
     DrawRectangleRec(rods[i].rect, rods[i].color);
-    DrawRectangleLinesEx(rods[i].rect, 1., BLACK)
+    DrawRectangleLinesEx(rods[i].rect, 1., BLACK);
   }
 }
 
