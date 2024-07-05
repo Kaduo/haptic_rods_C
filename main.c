@@ -105,13 +105,6 @@ double get_per_rod_setting(config_setting_t *setting, char *expr_name) {
   }
 }
 
-double is_len(double a, double b) {
-  if (a == b) {
-    return 1;
-  }
-  return 0;
-}
-
 void generate_signals(config_t cfg, Signal *buf, int count) {
   double l;
   te_variable vars[] = {{"l", &l}};
@@ -294,10 +287,6 @@ int main(void) {
 
         }
 
-
-        // Signal sig = {STEADY, 255, 255, 0, 0, 0};
-        // sig.offset = 0;
-        // set_signal(fd, -1, -1, sig);
         if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
           collision_frame_count = 3;
@@ -307,16 +296,16 @@ int main(void) {
       }
 
 
-      for (i=0; i<NB_RODS_MENU*3; i++) {
+      if (collided) {
+        // Check that we didn't merge two rods by accident.
+        for (i=0; i<NB_RODS_MENU*3; i++) {
 
-        if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)
-        && i!= selected) {
-          rodsMenu[selected].rect.x = old_x;
-          rodsMenu[selected].rect.y = old_y;
-
+          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) && i!= selected) {
+            rodsMenu[selected].rect.x = old_x;
+            rodsMenu[selected].rect.y = old_y;
           }
+        }
       }
-
 
       newly_collided = !collided;
       // Signal sig = signals[selected];
@@ -326,10 +315,6 @@ int main(void) {
           set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
         }
       }
-      // /* clear_signal(fd); */
-      // /* add_signal(fd, -1, -1, signals[selected]); */
-      // set_signal(fd, -1, -1, sig);
-      // play_signal(fd, 1);
       // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
