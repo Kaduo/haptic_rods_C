@@ -312,7 +312,7 @@ int main(void) {
         }
       }
 
-      newly_collided = !collided
+      newly_collided = !collided;
       // Signal sig = signals[selected];
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
