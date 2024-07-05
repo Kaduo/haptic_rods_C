@@ -34,15 +34,16 @@ void DrawRods(Rod rods[], int nbRods) {
 void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   int i;
   for (i = 0; i < 10; i++) {
-    rodsMenu[i+shift] =
-        (Rod){.rect = {shift*UNIT_ROD_WIDTH, i * ROD_HEIGHT, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
-              .color = colors[i]};
+    rodsMenu[i + shift] = (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * ROD_HEIGHT,
+                                         (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+                                .color = colors[i]};
   }
 }
 
 bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
-  return ((rect2.x < rect1.x ) && (rect1.x < rect2.x + rect2.width)) ||
-         ((rect2.x < rect1.x + rect1.width) && ( rect1.x + rect1.width < rect2.x + rect2.width));
+  return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
+         ((rect2.x < rect1.x + rect1.width) &&
+          (rect1.x + rect1.width < rect2.x + rect2.width));
 }
 
 int compute_speed(float delta_x, float delta_y, float *old_time) {
@@ -204,11 +205,14 @@ int main(void) {
   int deltaX = 0;
   int deltaY = 0;
 
-  Rod rodsMenu[NB_RODS_MENU*3];
+  Rod rodsMenu[NB_RODS_MENU * 3];
   int display = GetCurrentMonitor();
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 0);
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 10);
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display), 20);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+               0);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+               10);
+  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+               20);
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
@@ -218,6 +222,8 @@ int main(void) {
   int j = 0;
   int i;
 
+  bool newly_collided = true;
+
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -225,18 +231,19 @@ int main(void) {
 
     Vector2 mousePosition = GetMousePosition();
 
+    collided = false;
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
-      for (i = 0; i < NB_RODS_MENU*3; i++) {
+      for (i = 0; i < NB_RODS_MENU * 3; i++) {
         if (CheckCollisionPointRec(mousePosition, rodsMenu[i].rect)) {
           selected = i;
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
-          // set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]); FIXME
+          set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
         }
       }
@@ -247,7 +254,6 @@ int main(void) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
-      bool collided = false;
       float dx = mousePosition.x + deltaX - rodsMenu[selected].rect.x;
       float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
       float old_x = rodsMenu[selected].rect.x;
@@ -257,14 +263,17 @@ int main(void) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
 
-      for (i = 0; i < NB_RODS_MENU*3; i++) {
+      for (i = 0; i < NB_RODS_MENU * 3; i++) {
 
         Rectangle rect2 = rodsMenu[i].rect;
 
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
 
-          if (CollisionTopToBottom(rect1, rect2) || CollisionTopToBottom(rect2, rect1)) {
+          collided = true;
+
+          if (CollisionTopToBottom(rect1, rect2) ||
+              CollisionTopToBottom(rect2, rect1)) {
             if (rect1.y < rect2.y) {
               rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
@@ -281,31 +290,29 @@ int main(void) {
             }
           }
 
-          Signal sig = {STEADY, 255,255,0,0,0};
-          sig.offset = 0;
+          // for (j=0; j<NB_RODS_MENU*3; j++) {
 
+          //   if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[j].rect)
+          //   && j!=i) {
+          //     rodsMenu[selected].rect.x = old_x;
+          //     rodsMenu[selected].rect.y = old_y;
+
+          //     }
+          // }
+        }
+
+        // Signal sig = {STEADY, 255, 255, 0, 0, 0};
+        // sig.offset = 0;
+        // set_signal(fd, -1, -1, sig);
+        if (collision_frame_count == 0 && newly_collided) {
+          Signal sig = signals[selected % NB_RODS_MENU];
+          collision_frame_count = 5;
+          sig.offset = 255;
           set_signal(fd, -1, -1, sig);
-          if (collision_frame_count == 0 && !collided) {
-            Signal sig = signals[selected % NB_RODS_MENU];
-            collision_frame_count = 5;
-            sig.offset = 255;
-            set_signal(fd, -1, -1, sig);
-          }
-            collided = true;
-
-
-          for (j=0; j<NB_RODS_MENU*3; j++) {
-          
-          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[j].rect) && j!=i) {
-            rodsMenu[selected].rect.x = old_x;
-            rodsMenu[selected].rect.y = old_y;
-
-          }
-          }
-
-
         }
       }
+
+      newly_collided = !collided
       // Signal sig = signals[selected];
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
@@ -317,11 +324,11 @@ int main(void) {
       // /* add_signal(fd, -1, -1, signals[selected]); */
       // set_signal(fd, -1, -1, sig);
       // play_signal(fd, 1);
-      //set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
     // Draw menu
-    DrawRods(rodsMenu, NB_RODS_MENU*3);
+    DrawRods(rodsMenu, NB_RODS_MENU * 3);
 
     EndDrawing();
   }
