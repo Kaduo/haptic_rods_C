@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 const int NB_RODS_MENU = 10;
-const int UNIT_ROD_WIDTH = 30;
+const int UNIT_ROD_WIDTH = 40;
 const int ROD_HEIGHT = 40;
 const Color colors[] = {LIGHTGRAY, RED,   GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE,   ORANGE};
