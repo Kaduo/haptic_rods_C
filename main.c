@@ -236,14 +236,14 @@ int main(void) {
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
 
-          set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
+          // set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]); FIXME
           break;
         }
       }
     } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
       selected = -1;
-      clear_signal(fd);
-      play_signal(fd, 0);
+      // clear_signal(fd);
+      // play_signal(fd, 0); FIXME
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
@@ -294,11 +294,15 @@ int main(void) {
 
           }
 
-          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)) {
+          for (j=0; j<NB_RODS_MENU*3; j++) {
+          
+          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[j].rect) && j!=i) {
             rodsMenu[selected].rect.x = old_x;
             rodsMenu[selected].rect.y = old_y;
 
           }
+          }
+
 
         }
       }
