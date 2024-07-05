@@ -294,16 +294,6 @@ int main(void) {
         }
 
 
-          for (i=0; i<NB_RODS_MENU*3; i++) {
-
-            if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)
-            && i!= selected) {
-              rodsMenu[selected].rect.x = old_x;
-              rodsMenu[selected].rect.y = old_y;
-
-              }
-          }
-
         // Signal sig = {STEADY, 255, 255, 0, 0, 0};
         // sig.offset = 0;
         // set_signal(fd, -1, -1, sig);
@@ -314,6 +304,18 @@ int main(void) {
           set_signal(fd, -1, -1, sig);
         }
       }
+
+
+      for (i=0; i<NB_RODS_MENU*3; i++) {
+
+        if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)
+        && i!= selected) {
+          rodsMenu[selected].rect.x = old_x;
+          rodsMenu[selected].rect.y = old_y;
+
+          }
+      }
+
 
       newly_collided = !collided;
       // Signal sig = signals[selected];
