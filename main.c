@@ -223,6 +223,7 @@ int main(void) {
   int i;
 
   bool newly_collided = true;
+  bool collided = false;
 
   // Main loop
   while (!WindowShouldClose()) {
