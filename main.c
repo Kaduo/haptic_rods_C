@@ -291,16 +291,18 @@ int main(void) {
             }
           }
 
-          // for (j=0; j<NB_RODS_MENU*3; j++) {
-
-          //   if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[j].rect)
-          //   && j!=i) {
-          //     rodsMenu[selected].rect.x = old_x;
-          //     rodsMenu[selected].rect.y = old_y;
-
-          //     }
-          // }
         }
+
+
+          for (i=0; i<NB_RODS_MENU*3; i++) {
+
+            if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect)
+            && i!= selected) {
+              rodsMenu[selected].rect.x = old_x;
+              rodsMenu[selected].rect.y = old_y;
+
+              }
+          }
 
         // Signal sig = {STEADY, 255, 255, 0, 0, 0};
         // sig.offset = 0;
