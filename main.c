@@ -218,6 +218,7 @@ int main(void) {
 
   bool newly_collided = true;
   bool collided = false;
+  bool original_signal = true;
 
   // Main loop
   while (!WindowShouldClose()) {
@@ -319,10 +320,12 @@ int main(void) {
         if (collision_frame_count == 0) {
           Signal sig = signals[selected % NB_RODS_MENU];
           sig.offset = 0;
+          original_signal = false;
           set_signal(fd, -1, -1, sig);
         }
-      } else if (!collided) {
-        set_signal(fd, -1, -1, rodsMenu[selected].signal)
+      } else if (!collided && !original_signal) {
+        original_signal = true;
+        set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
       // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
