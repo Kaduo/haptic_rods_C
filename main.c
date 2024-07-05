@@ -250,7 +250,8 @@ int main(void) {
       }
     } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
       selected = -1;
-      // clear_signal(fd);
+      clear_signal(fd);
+      collision_frame_count = 0;
       // play_signal(fd, 0); FIXME
     }
 
@@ -299,7 +300,7 @@ int main(void) {
         // set_signal(fd, -1, -1, sig);
         if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
-          collision_frame_count = 5;
+          collision_frame_count = 3;
           sig.offset = 255;
           set_signal(fd, -1, -1, sig);
         }
