@@ -181,6 +181,7 @@ int main(void) {
   int fd;
   fd = connect_to_tty();
   int collision_frame_count = 0;
+  int no_collision_frame_count = 0;
 
   double times[100]; // FIXME
   Vector2 positions[100];
@@ -228,6 +229,7 @@ int main(void) {
     collided = false;
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      no_collision_frame_count = 3;
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
@@ -287,7 +289,10 @@ int main(void) {
 
         }
 
-        if (collision_frame_count == 0 && newly_collided && collided) {
+        if (no_collision_frame_count > 0) {
+          no_collision_frame_count -= 1;
+        }
+        else if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
           collision_frame_count = 3;
           sig.offset = 255;
