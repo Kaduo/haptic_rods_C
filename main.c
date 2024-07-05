@@ -238,7 +238,7 @@ int main(void) {
           selected = i;
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
-
+          
           set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
         }
@@ -317,8 +317,12 @@ int main(void) {
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         if (collision_frame_count == 0) {
-          set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
+          Signal sig = signals[selected % NB_RODS_MENU];
+          sig.offset = 0;
+          set_signal(fd, -1, -1, sig);
         }
+      } else if (!collided) {
+        set_signal(fd, -1, -1, rodsMenu[selected].signal)
       }
       // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
