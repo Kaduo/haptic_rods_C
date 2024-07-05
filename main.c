@@ -305,7 +305,7 @@ int main(void) {
         // Signal sig = {STEADY, 255, 255, 0, 0, 0};
         // sig.offset = 0;
         // set_signal(fd, -1, -1, sig);
-        if (collision_frame_count == 0 && newly_collided) {
+        if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
           collision_frame_count = 5;
           sig.offset = 255;
