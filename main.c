@@ -285,14 +285,14 @@ int main(void) {
           sig.offset = 0;
 
           set_signal(fd, -1, -1, sig);
-          collided = true;
-          if (collision_frame_count == 0) {
+          if (collision_frame_count == 0 && !collided) {
             Signal sig = signals[selected % NB_RODS_MENU];
             collision_frame_count = 5;
             sig.offset = 255;
             set_signal(fd, -1, -1, sig);
-
           }
+            collided = true;
+
 
           for (j=0; j<NB_RODS_MENU*3; j++) {
           
