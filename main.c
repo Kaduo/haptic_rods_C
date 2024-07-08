@@ -175,6 +175,42 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
       }
     }
   }
+
+  int per_group = 0;
+  config_lookup_bool(&cfg, "per_rod", &per_rod);
+  if (per_group) {
+     char *groups[] = {"1,7", "2,4,8", "3,6,9", "2,4,8", "5,10",
+                         "3,6,9", "1,7", "2,4,8", "3,6,9", "5,10"};
+    int i;
+    for (i = 0; i < 10; i++) {
+      config_setting_t *setting = config_lookup(&cfg, groups[i]);
+
+      if (setting != NULL) {
+
+        double period = get_per_rod_setting(setting, "period");
+        if (period != PARAMETER_NOT_SET) {
+          buf[i].period = clamp(period, 0, 0xFFFF);
+        }
+
+        double amplitude = get_per_rod_setting(setting, "amplitude");
+        if (amplitude != PARAMETER_NOT_SET) {
+          buf[i].amplitude = clamp(amplitude, 0, 0xFF);
+        }
+
+        double offset = get_per_rod_setting(setting, "offset");
+        if (offset != PARAMETER_NOT_SET) {
+          buf[i].offset = clamp(offset, 0, 0xFF);
+        }
+
+        double duty = get_per_rod_setting(setting, "duty");
+        if (duty != PARAMETER_NOT_SET) {
+          buf[i].duty = clamp(duty, 0, 0xFF);
+        }
+      }
+    }
+
+  }
+
 }
 
 int main(void) {
