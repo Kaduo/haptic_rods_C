@@ -404,10 +404,8 @@ int main(void) {
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         if (collision_frame_count == 0) {
-          Signal sig = signals[selected % NB_RODS_MENU];
-          sig.offset = 0;
           original_signal = false;
-          set_signal(fd, -1, -1, sig);
+          clear_signal(fd);
         }
       } else if (!collided && !original_signal) {
         printf("hello world (:\n");
