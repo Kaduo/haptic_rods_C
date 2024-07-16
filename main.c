@@ -40,6 +40,18 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   }
 }
 
+void InitRods(Rod rods[], int nb_per_kind[]) {
+  int i;
+  int j;
+  int k = 0;
+  for (i = 0; i < 10; i++) {
+    for (j = 0; j < nb_per_kind[i]; j++) {
+      rods[k] = (Rod){.rect = {0, 0, (i+1)*UNIT_ROD_WIDTH, ROD_HEIGHT}, .color = colors[i]};
+      k += 1;
+    }
+  }
+}
+
 bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
   return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
          ((rect2.x < rect1.x + rect1.width) &&
@@ -177,10 +189,10 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   }
 
   int per_group = 0;
-  config_lookup_bool(&cfg, "per_rod", &per_rod);
+  config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group) {
-     char *groups[] = {"1,7", "2,4,8", "3,6,9", "2,4,8", "5,10",
-                         "3,6,9", "1,7", "2,4,8", "3,6,9", "5,10"};
+    char *groups[] = {"1,7",   "2,4,8", "3,6,9", "2,4,8", "5,10",
+                      "3,6,9", "1,7",   "2,4,8", "3,6,9", "5,10"};
     int i;
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
@@ -208,9 +220,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
         }
       }
     }
-
   }
-
 }
 
 int main(void) {
@@ -275,7 +285,7 @@ int main(void) {
           selected = i;
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
           deltaY = rodsMenu[i].rect.y - mousePosition.y;
-          
+
           set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
         }
@@ -319,17 +329,14 @@ int main(void) {
 
               rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
-
               rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
             }
           }
-
         }
 
         if (no_collision_frame_count > 0) {
           no_collision_frame_count -= 1;
-        }
-        else if (collision_frame_count == 0 && newly_collided && collided) {
+        } else if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
           collision_frame_count = 3;
           sig.offset = 255;
@@ -337,12 +344,12 @@ int main(void) {
         }
       }
 
-
       if (collided) {
         // Check that we didn't merge two rods by accident.
-        for (i=0; i<NB_RODS_MENU*3; i++) {
+        for (i = 0; i < NB_RODS_MENU * 3; i++) {
 
-          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) && i!= selected) {
+          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
+              i != selected) {
             rodsMenu[selected].rect.x = old_x;
             rodsMenu[selected].rect.y = old_y;
           }
