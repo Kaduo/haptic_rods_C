@@ -353,6 +353,7 @@ int main(void) {
 
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
+          printf("hihihi\n");
 
           collided = true;
 
