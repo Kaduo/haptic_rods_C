@@ -408,6 +408,7 @@ int main(void) {
           set_signal(fd, -1, -1, sig);
         }
       } else if (!collided && !original_signal) {
+        printf("hello world (:\n");
         original_signal = true;
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
