@@ -46,7 +46,8 @@ void InitRods(Rod rods[], int nb_per_kind[]) {
   int k = 0;
   for (i = 0; i < 10; i++) {
     for (j = 0; j < nb_per_kind[i]; j++) {
-      rods[k] = (Rod){.rect = {0, 0, (i+1)*UNIT_ROD_WIDTH, ROD_HEIGHT}, .color = colors[i]};
+      rods[k] = (Rod){.rect = {0, 0, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+                      .color = colors[i]};
       k += 1;
     }
   }
@@ -126,7 +127,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
   te_expr offset_expr = get_expr(&cfg, "offset_expr", vars);
 
-  char *signal_parameter_name = "signal";
+  char *signal_parameter_name = "signal_type";
   const char *signal_name;
   int signal = SINE;
   if (config_lookup_string(&cfg, signal_parameter_name, &signal_name)) {
@@ -184,6 +185,23 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
         if (duty != PARAMETER_NOT_SET) {
           buf[i].duty = clamp(duty, 0, 0xFF);
         }
+        const char *signal_name;
+        int signal = SINE;
+        if (config_setting_lookup_string(setting, signal_parameter_name,
+                                         &signal_name)) {
+          if (strcmp(signal_name, "sine") == 0) {
+            signal = SINE;
+          } else if (strcmp(signal_name, "steady") == 0) {
+            signal = STEADY;
+          } else if (strcmp(signal_name, "triangle") == 0) {
+            signal = TRIANGLE;
+          } else if (strcmp(signal_name, "front teeth") == 0) {
+            signal = FRONT_TEETH;
+          } else if (strcmp(signal_name, "back teeth") == 0) {
+            signal = BACK_TEETH;
+          }
+          buf[i].signal_type = signal;
+        }
       }
     }
   }
@@ -221,6 +239,23 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
         double duty = get_per_rod_setting(setting, "duty");
         if (duty != PARAMETER_NOT_SET) {
           buf[i].duty = clamp(duty, 0, 0xFF);
+        }
+        const char *signal_name;
+        int signal = SINE;
+        if (config_setting_lookup_string(setting, signal_parameter_name,
+                                         &signal_name)) {
+          if (strcmp(signal_name, "sine") == 0) {
+            signal = SINE;
+          } else if (strcmp(signal_name, "steady") == 0) {
+            signal = STEADY;
+          } else if (strcmp(signal_name, "triangle") == 0) {
+            signal = TRIANGLE;
+          } else if (strcmp(signal_name, "front teeth") == 0) {
+            signal = FRONT_TEETH;
+          } else if (strcmp(signal_name, "back teeth") == 0) {
+            signal = BACK_TEETH;
+          }
+          buf[i].signal_type = signal;
         }
       }
     }
