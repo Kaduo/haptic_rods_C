@@ -284,14 +284,14 @@ int main(void) {
   int deltaX = 0;
   int deltaY = 0;
 
-  Rod rodsMenu[NB_RODS_MENU * 3];
+  Rod rodsMenu[NB_RODS_MENU];
   int display = GetCurrentMonitor();
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                0);
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+  /*InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                10);
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-               20);
+               20);*/
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
@@ -319,7 +319,7 @@ int main(void) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
-      for (i = 0; i < NB_RODS_MENU * 3; i++) {
+      for (i = 0; i < NB_RODS_MENU; i++) {
         if (CheckCollisionPointRec(mousePosition, rodsMenu[i].rect)) {
           selected = i;
           deltaX = rodsMenu[i].rect.x - mousePosition.x;
@@ -346,7 +346,7 @@ int main(void) {
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
 
-      for (i = 0; i < NB_RODS_MENU * 3; i++) {
+      for (i = 0; i < NB_RODS_MENU; i++) {
 
         Rectangle rect2 = rodsMenu[i].rect;
 
@@ -385,7 +385,7 @@ int main(void) {
 
       if (collided) {
         // Check that we didn't merge two rods by accident.
-        for (i = 0; i < NB_RODS_MENU * 3; i++) {
+        for (i = 0; i < NB_RODS_MENU; i++) {
 
           if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
               i != selected) {
@@ -413,7 +413,7 @@ int main(void) {
     }
 
     // Draw menu
-    DrawRods(rodsMenu, NB_RODS_MENU * 3);
+    DrawRods(rodsMenu, NB_RODS_MENU);
 
     EndDrawing();
   }
