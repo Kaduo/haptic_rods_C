@@ -416,7 +416,7 @@ int main(void) {
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
       set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
-      printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
+      printf("%d %d\n", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
     // Draw menu
