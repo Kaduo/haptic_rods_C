@@ -297,6 +297,8 @@ int main(void) {
   ToggleFullscreen();
   SetTargetFPS(40);
 
+  set_direction(fd, 0, 100); // FIXME ?
+
   float time;
   time = 0;
   int j = 0;
@@ -415,7 +417,7 @@ int main(void) {
         original_signal = true;
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
-      set_direction(fd, 0, 100); // FIXME ?
+      // set_direction(fd, 0, 100); // FIXME ?
 
       //set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
       //printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
