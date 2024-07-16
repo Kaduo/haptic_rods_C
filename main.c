@@ -191,16 +191,20 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   int per_group = 0;
   config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group) {
+    printf("hell oworld !!!\n\n");
     char *groups[] = {"g1-7",   "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
                       "g3-6-9", "g1-7",   "g2-4-8", "g3-6-9", "g5-10"};
     int i;
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
+      printf("%d here \n\n", i);
 
       if (setting != NULL) {
+        printf("hi world!\n");
 
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
+          printf("wellellwell\n");
           buf[i].period = clamp(period, 0, 0xFFFF);
         }
 
