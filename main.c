@@ -377,7 +377,7 @@ int main(void) {
           no_collision_frame_count -= 1;
         } else if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
-          collision_frame_count = 3;
+          collision_frame_count =11;
           sig.offset = 255;
           set_signal(fd, -1, -1, sig);
         }
