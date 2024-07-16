@@ -409,6 +409,9 @@ int main(void) {
         }
       } else if (!collided && !original_signal) {
         printf("hello world (:\n");
+        printf("%d \n", signals[selected % NB_RODS_MENU].amplitude);
+        printf("%d \n", signals[selected % NB_RODS_MENU].period);
+        printf("%d \n", signals[selected % NB_RODS_MENU].offset);
         original_signal = true;
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
