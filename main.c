@@ -415,7 +415,7 @@ int main(void) {
         original_signal = true;
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
-      // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
     }
 
     // Draw menu
