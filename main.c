@@ -191,8 +191,8 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   int per_group = 0;
   config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group) {
-    char *groups[] = {"1,7",   "2,4,8", "3,6,9", "2,4,8", "5,10",
-                      "3,6,9", "1,7",   "2,4,8", "3,6,9", "5,10"};
+    char *groups[] = {"g1-7",   "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
+                      "g3-6-9", "g1-7",   "g2-4-8", "g3-6-9", "g5-10"};
     int i;
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
