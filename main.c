@@ -310,12 +310,12 @@ int main(void) {
                10);
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                20);*/
-  InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
   SetTargetFPS(40);
 
+  InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
   set_direction(fd, 0, 100); // FIXME ?
 
   float time;
