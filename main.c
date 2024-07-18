@@ -40,15 +40,24 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   }
 }
 
-void InitRods(Rod rods[], int nb_per_kind[]) {
+void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
   int i;
   int j;
+  int x = 0;
+  int y = 0;
+  int current_length = 0;
   int k = 0;
   for (i = 0; i < 10; i++) {
+    current_length += UNIT_ROD_WIDTH;
     for (j = 0; j < nb_per_kind[i]; j++) {
-      rods[k] = (Rod){.rect = {0, 0, (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+      if (current_length + x > screen_width) {
+        x = 0;
+        y += ROD_HEIGHT + 1;
+      }
+      rods[k] = (Rod){.rect = {x, y, current_length, ROD_HEIGHT},
                       .color = colors[i]};
       k += 1;
+      x += current_length;
     }
   }
 }
@@ -274,21 +283,31 @@ int main(void) {
     return (EXIT_FAILURE);
   }
 
+  int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
+
+  int nb_rods = 0;
+  int i;
+  for (i=0; i<10; i++) {
+    nb_rods += nb_rods_per_color[i];
+      }
+
+  Rod rods[nb_rods];
+
   Signal signals[NB_RODS_MENU];
-  generate_signals(cfg, signals, NB_RODS_MENU);
+  generate_signals(cfg, signals, nb_rods);
 
   int selected = -1;
   int deltaX = 0;
   int deltaY = 0;
 
-  Rod rodsMenu[NB_RODS_MENU];
   int display = GetCurrentMonitor();
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-               0);
+  //InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+   //            0);
   /*InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                10);
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                20);*/
+  InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
@@ -319,11 +338,11 @@ int main(void) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
-      for (i = 0; i < NB_RODS_MENU; i++) {
-        if (CheckCollisionPointRec(mousePosition, rodsMenu[i].rect)) {
+      for (i = 0; i < nb_rods; i++) {
+        if (CheckCollisionPointRec(mousePosition, rods[i].rect)) {
           selected = i;
-          deltaX = rodsMenu[i].rect.x - mousePosition.x;
-          deltaY = rodsMenu[i].rect.y - mousePosition.y;
+          deltaX = rods[i].rect.x - mousePosition.x;
+          deltaY = rods[i].rect.y - mousePosition.y;
 
           set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
@@ -337,20 +356,20 @@ int main(void) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
-      float dx = mousePosition.x + deltaX - rodsMenu[selected].rect.x;
-      float dy = mousePosition.y + deltaY - rodsMenu[selected].rect.y;
-      float old_x = rodsMenu[selected].rect.x;
-      float old_y = rodsMenu[selected].rect.y;
-      Rectangle rect1 = rodsMenu[selected].rect;
+      float dx = mousePosition.x + deltaX - rods[selected].rect.x;
+      float dy = mousePosition.y + deltaY - rods[selected].rect.y;
+      float old_x = rods[selected].rect.x;
+      float old_y = rods[selected].rect.y;
+      Rectangle rect1 = rods[selected].rect;
 
       rodsMenu[selected].rect.x = mousePosition.x + deltaX;
       rodsMenu[selected].rect.y = mousePosition.y + deltaY;
 
       for (i = 0; i < NB_RODS_MENU; i++) {
 
-        Rectangle rect2 = rodsMenu[i].rect;
+        Rectangle rect2 = rods[i].rect;
 
-        if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
+        if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
             i != selected) {
 
           collided = true;
@@ -358,17 +377,17 @@ int main(void) {
           if (CollisionTopToBottom(rect1, rect2) ||
               CollisionTopToBottom(rect2, rect1)) {
             if (rect1.y < rect2.y) {
-              rodsMenu[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
+              rods[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
 
-              rodsMenu[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
+              rods[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
             }
           } else {
             if (rect1.x < rect2.x) {
 
-              rodsMenu[selected].rect.x = rect2.x - rect1.width - 1;
+              rods[selected].rect.x = rect2.x - rect1.width - 1;
             } else {
-              rodsMenu[selected].rect.x = rect2.x + rect2.width + 1;
+              rods[selected].rect.x = rect2.x + rect2.width + 1;
             }
           }
         }
@@ -385,12 +404,12 @@ int main(void) {
 
       if (collided) {
         // Check that we didn't merge two rods by accident.
-        for (i = 0; i < NB_RODS_MENU; i++) {
+        for (i = 0; i < nb_rods; i++) {
 
-          if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
+          if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
               i != selected) {
-            rodsMenu[selected].rect.x = old_x;
-            rodsMenu[selected].rect.y = old_y;
+            rods[selected].rect.x = old_x;
+            rods[selected].rect.y = old_y;
           }
         }
       }
@@ -414,7 +433,7 @@ int main(void) {
     }
 
     // Draw menu
-    DrawRods(rodsMenu, NB_RODS_MENU);
+    DrawRods(rods, nb_rods);
 
     EndDrawing();
   }
