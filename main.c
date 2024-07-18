@@ -362,8 +362,8 @@ int main(void) {
       float old_y = rods[selected].rect.y;
       Rectangle rect1 = rods[selected].rect;
 
-      rodsMenu[selected].rect.x = mousePosition.x + deltaX;
-      rodsMenu[selected].rect.y = mousePosition.y + deltaY;
+      rods[selected].rect.x = mousePosition.x + deltaX;
+      rods[selected].rect.y = mousePosition.y + deltaY;
 
       for (i = 0; i < NB_RODS_MENU; i++) {
 
