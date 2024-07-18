@@ -209,20 +209,16 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
   int per_group = 0;
   config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group) {
-    printf("hell oworld !!!\n\n");
     char *groups[] = {"g1-7",   "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
                       "g3-6-9", "g1-7",   "g2-4-8", "g3-6-9", "g5-10"};
     int i;
     for (i = 0; i < 10; i++) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
-      printf("%d here \n\n", i);
 
       if (setting != NULL) {
-        printf("hi world!\n");
 
         double period = get_per_rod_setting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
-          printf("wellellwell\n");
           buf[i].period = clamp(period, 0, 0xFFFF);
         }
 
@@ -248,6 +244,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
             signal = SINE;
           } else if (strcmp(signal_name, "steady") == 0) {
             signal = STEADY;
+            printf("hello there");
           } else if (strcmp(signal_name, "triangle") == 0) {
             signal = TRIANGLE;
           } else if (strcmp(signal_name, "front teeth") == 0) {
@@ -355,7 +352,6 @@ int main(void) {
 
         if (CheckCollisionRecs(rodsMenu[selected].rect, rodsMenu[i].rect) &&
             i != selected) {
-          printf("hihihi\n");
 
           collided = true;
 
@@ -408,10 +404,6 @@ int main(void) {
           clear_signal(fd);
         }
       } else if (!collided && !original_signal) {
-        printf("hello world (:\n");
-        printf("%d \n", signals[selected % NB_RODS_MENU].amplitude);
-        printf("%d \n", signals[selected % NB_RODS_MENU].period);
-        printf("%d \n", signals[selected % NB_RODS_MENU].offset);
         original_signal = true;
         set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
       }
