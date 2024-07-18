@@ -318,7 +318,7 @@ int main(void) {
   float time;
   time = 0;
   int j = 0;
-  int i;
+  i = 0;
 
   bool newly_collided = true;
   bool collided = false;
