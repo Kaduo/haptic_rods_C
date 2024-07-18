@@ -51,6 +51,9 @@ void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
     current_length += UNIT_ROD_WIDTH;
     for (j = 0; j < nb_per_kind[i]; j++) {
       if (current_length + x > screen_width) {
+        printf("current length %d\n", current_length);
+        printf("x %d\n", x);
+        printf("width %d\n", screen_width);
         x = 0;
         y += ROD_HEIGHT + 1;
       }
