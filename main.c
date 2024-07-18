@@ -192,6 +192,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
           if (strcmp(signal_name, "sine") == 0) {
             signal = SINE;
           } else if (strcmp(signal_name, "steady") == 0) {
+            printf("hello tehre !!!\n\n\n");
             signal = STEADY;
           } else if (strcmp(signal_name, "triangle") == 0) {
             signal = TRIANGLE;
@@ -244,7 +245,6 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
             signal = SINE;
           } else if (strcmp(signal_name, "steady") == 0) {
             signal = STEADY;
-            printf("hello there");
           } else if (strcmp(signal_name, "triangle") == 0) {
             signal = TRIANGLE;
           } else if (strcmp(signal_name, "front teeth") == 0) {
