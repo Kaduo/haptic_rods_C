@@ -60,7 +60,7 @@ void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
       rods[k] = (Rod){.rect = {x, y, current_length, ROD_HEIGHT},
                       .color = colors[i]};
       k += 1;
-      x += current_length;
+      x += current_length + 1;
     }
   }
 }
@@ -368,7 +368,7 @@ int main(void) {
       rods[selected].rect.x = mousePosition.x + deltaX;
       rods[selected].rect.y = mousePosition.y + deltaY;
 
-      for (i = 0; i < NB_RODS_MENU; i++) {
+      for (i = 0; i < nb_rods; i++) {
 
         Rectangle rect2 = rods[i].rect;
 
