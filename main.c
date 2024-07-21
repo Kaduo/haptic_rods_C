@@ -8,6 +8,7 @@
 #include <libconfig.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
@@ -40,7 +41,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   }
 }
 
-void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
+void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
   int i;
   int j;
   int x = 0;
@@ -49,11 +50,11 @@ void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
   int k = 0;
   for (i = 0; i < 10; i++) {
     current_length += UNIT_ROD_WIDTH;
-    for (j = 0; j < nb_per_kind[i]; j++) {
-      if (current_length + x > screen_width) {
+    for (j = 0; j < nbRodsPerLength[i]; j++) {
+      if (current_length + x > screenWidth) {
         printf("current length %d\n", current_length);
         printf("x %d\n", x);
-        printf("width %d\n", screen_width);
+        printf("width %d\n", screenWidth);
         x = 0;
         y += ROD_HEIGHT + 1;
       }
@@ -65,36 +66,36 @@ void InitRods(Rod rods[], int nb_per_kind[], int screen_width) {
   }
 }
 
-bool CollisionTopToBottom(Rectangle rect1, Rectangle rect2) {
+bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2) {
   return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
          ((rect2.x < rect1.x + rect1.width) &&
           (rect1.x + rect1.width < rect2.x + rect2.width));
 }
 
-int compute_speed(float delta_x, float delta_y, float *old_time) {
-  float new_time = GetFrameTime();
+int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
+  float newTime = GetFrameTime();
   int speed;
-  if ((*old_time != 0) && (new_time - *old_time != 0)) {
-    speed = Vector2Length((Vector2){.x = delta_x, .y = delta_y}) /
-            (GetFrameTime() - *old_time);
+  if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
+    speed = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
+            (GetFrameTime() - *oldTime);
   } else {
     speed = 1000;
   }
-  *old_time = new_time;
+  *oldTime = newTime;
   return abs(speed);
 }
 
-int compute_angle(float delta_x, float delta_y) {
+int ComputeAngle(float deltaX, float deltaY) {
   return Vector2Angle((Vector2){.x = 1, .y = 0},
-                      (Vector2){.x = delta_x, .y = delta_y});
+                      (Vector2){.x = deltaX, .y = deltaY});
 }
 
-double clamp(double d, double min, double max) {
+double DoubleClamp(double d, double min, double max) {
   const double t = d < min ? min : d;
   return t > max ? max : t;
 }
 
-config_t read_config(bool *err, char *config_name) {
+config_t LoadConfig(bool *err, char *config_name) {
   config_t cfg;
   config_init(&cfg);
   if (!config_read_file(&cfg, config_name)) {
@@ -108,62 +109,78 @@ config_t read_config(bool *err, char *config_name) {
   return cfg;
 }
 
-te_expr get_expr(config_t *cfg, char *expr_name, te_variable *vars) {
-  const te_expr *expr = 0;
+te_expr *GetConfigExpr(config_t *cfg, char *expr_name, te_variable *vars) {
   const char *string_expr;
   int err = 0;
   if (config_lookup_string(cfg, expr_name, &string_expr)) {
-    expr = te_compile(string_expr, vars, 1, &err);
+    return te_compile(string_expr, vars, 1, &err);
   }
-  return *expr;
+  printf("\nNONONOONO\n");
+  return 0;
 }
 
 const double PARAMETER_NOT_SET = -10;
 
-double get_per_rod_setting(config_setting_t *setting, char *expr_name) {
+double ReadParameterFromSetting(config_setting_t *setting, char *exprName) {
   const char *string_expr;
   int err = 0;
-  if (config_setting_lookup_string(setting, expr_name, &string_expr)) {
+  if (config_setting_lookup_string(setting, exprName, &string_expr)) {
     return te_interp(string_expr, &err);
   } else {
     return PARAMETER_NOT_SET;
   }
 }
 
-void generate_signals(config_t cfg, Signal *buf, int count) {
-  double l;
-  te_variable vars[] = {{"l", &l}};
+void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l, char *exprName, double mask) {
+  double my_l = l;
+  te_variable vars[] = {{"l", &my_l}};
+  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
+  if ((void *)expr != 0) {
+    *parameter = (uint16_t)DoubleClamp(te_eval(expr), 0, mask);
+  }
+}
 
-  te_expr period_expr = get_expr(&cfg, "period_expr", vars);
-  te_expr amplitude_expr = get_expr(&cfg, "amplitude_expr", vars);
-  te_expr duty_expr = get_expr(&cfg, "duty_expr", vars);
-  te_expr offset_expr = get_expr(&cfg, "offset_expr", vars);
+void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l, char *exprName, double mask) {
+  double my_l = l;
+  te_variable vars[] = {{"l", &my_l}};
+  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
+  if ((void *)expr != 0) {
+    *parameter = (uint8_t)DoubleClamp(te_eval(expr), 0, mask);
+  }
+  //printf("\n\n not there \n\n");
+}
 
-  char *signal_parameter_name = "signal_type";
-  const char *signal_name;
-  int signal = SINE;
-  if (config_lookup_string(&cfg, signal_parameter_name, &signal_name)) {
-    if (strcmp(signal_name, "sine") == 0) {
-      signal = SINE;
-    } else if (strcmp(signal_name, "steady") == 0) {
-      signal = STEADY;
-    } else if (strcmp(signal_name, "triangle") == 0) {
-      signal = TRIANGLE;
-    } else if (strcmp(signal_name, "front teeth") == 0) {
-      signal = FRONT_TEETH;
-    } else if (strcmp(signal_name, "back teeth") == 0) {
-      signal = BACK_TEETH;
+void SetSignalKind(config_t *cfg, SignalType *signalKind) {
+  const char *signalName;
+  if (config_lookup_string(cfg, "signal_type", &signalName)) {
+    if (strcmp(signalName, "sine") == 0) {
+      *signalKind= SINE;
+    } else if (strcmp(signalName, "steady") == 0) {
+      *signalKind= STEADY;
+    } else if (strcmp(signalName, "triangle") == 0) {
+      *signalKind= TRIANGLE;
+    } else if (strcmp(signalName, "front teeth") == 0) {
+      *signalKind= FRONT_TEETH;
+    } else if (strcmp(signalName, "back teeth") == 0) {
+      *signalKind= BACK_TEETH;
     }
   }
+}
+
+void InitSignals(config_t cfg, Signal *signals, int count) {
+
+  char *signal_parameter_name = "signal_type";
+  SignalType signal = SINE;
+  SetSignalKind(&cfg, &signal);
 
   int i;
   for (i = 0; i < count; i++) {
-    l = i;
-    double amplitude = clamp(te_eval(&amplitude_expr), 0, 0xFF);
-    double period = clamp(te_eval(&period_expr), 0, 0xFFFF);
-    double duty = clamp(te_eval(&duty_expr), 0, 0xFF);
-    double offset = clamp(te_eval(&offset_expr), 0, 0xFF);
-    buf[i] = signal_new(signal, amplitude, offset, duty, period, 0);
+    signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
+    SetExpr16ParameterOfSignal(&cfg, (uint16_t*)((char *)(&signals[i]) + offsetof(Signal, period)), i, "period_expr", 0xFFFF);
+    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, amplitude)), i, "amplitude_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, amplitude)), i, "amplitude_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, duty)), i, "duty_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, offset)), i, "offset_expr", 0xFFFF);
   }
 
   int per_rod = 0;
@@ -178,24 +195,24 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
 
       if (setting != NULL) {
 
-        double period = get_per_rod_setting(setting, "period");
+        double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
-          buf[i].period = clamp(period, 0, 0xFFFF);
+          signals[i].period = DoubleClamp(period, 0, 0xFFFF);
         }
 
-        double amplitude = get_per_rod_setting(setting, "amplitude");
+        double amplitude = ReadParameterFromSetting(setting, "amplitude");
         if (amplitude != PARAMETER_NOT_SET) {
-          buf[i].amplitude = clamp(amplitude, 0, 0xFF);
+          signals[i].amplitude = DoubleClamp(amplitude, 0, 0xFF);
         }
 
-        double offset = get_per_rod_setting(setting, "offset");
+        double offset = ReadParameterFromSetting(setting, "offset");
         if (offset != PARAMETER_NOT_SET) {
-          buf[i].offset = clamp(offset, 0, 0xFF);
+          signals[i].offset = DoubleClamp(offset, 0, 0xFF);
         }
 
-        double duty = get_per_rod_setting(setting, "duty");
+        double duty = ReadParameterFromSetting(setting, "duty");
         if (duty != PARAMETER_NOT_SET) {
-          buf[i].duty = clamp(duty, 0, 0xFF);
+          signals[i].duty = DoubleClamp(duty, 0, 0xFF);
         }
         const char *signal_name;
         int signal = SINE;
@@ -204,7 +221,6 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
           if (strcmp(signal_name, "sine") == 0) {
             signal = SINE;
           } else if (strcmp(signal_name, "steady") == 0) {
-            printf("hello tehre !!!\n\n\n");
             signal = STEADY;
           } else if (strcmp(signal_name, "triangle") == 0) {
             signal = TRIANGLE;
@@ -213,7 +229,7 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
           } else if (strcmp(signal_name, "back teeth") == 0) {
             signal = BACK_TEETH;
           }
-          buf[i].signal_type = signal;
+          signals[i].signal_type = signal;
         }
       }
     }
@@ -230,24 +246,24 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
 
       if (setting != NULL) {
 
-        double period = get_per_rod_setting(setting, "period");
+        double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
-          buf[i].period = clamp(period, 0, 0xFFFF);
+          signals[i].period = DoubleClamp(period, 0, 0xFFFF);
         }
 
-        double amplitude = get_per_rod_setting(setting, "amplitude");
+        double amplitude = ReadParameterFromSetting(setting, "amplitude");
         if (amplitude != PARAMETER_NOT_SET) {
-          buf[i].amplitude = clamp(amplitude, 0, 0xFF);
+          signals[i].amplitude = DoubleClamp(amplitude, 0, 0xFF);
         }
 
-        double offset = get_per_rod_setting(setting, "offset");
+        double offset = ReadParameterFromSetting(setting, "offset");
         if (offset != PARAMETER_NOT_SET) {
-          buf[i].offset = clamp(offset, 0, 0xFF);
+          signals[i].offset = DoubleClamp(offset, 0, 0xFF);
         }
 
-        double duty = get_per_rod_setting(setting, "duty");
+        double duty = ReadParameterFromSetting(setting, "duty");
         if (duty != PARAMETER_NOT_SET) {
-          buf[i].duty = clamp(duty, 0, 0xFF);
+          signals[i].duty = DoubleClamp(duty, 0, 0xFF);
         }
         const char *signal_name;
         int signal = SINE;
@@ -264,10 +280,30 @@ void generate_signals(config_t cfg, Signal *buf, int count) {
           } else if (strcmp(signal_name, "back teeth") == 0) {
             signal = BACK_TEETH;
           }
-          buf[i].signal_type = signal;
+          signals[i].signal_type = signal;
         }
       }
     }
+  }
+}
+
+void save_rods(Rod rods[], int nb_rods, FILE *file) {
+  int i;
+  for (i=0; i<nb_rods; i++) {
+    fprintf(file, "%d %f %f", (int)(rods[i].rect.width)/(int)UNIT_ROD_WIDTH, rods[i].rect.x, rods[i].rect.y);
+  }
+}
+
+void load_rods(FILE *file, int nb_rods, Rod rods[]) {
+  int i;
+  for (i=0; i<nb_rods; i++) {
+    Rod rod;
+    int l;
+    fscanf(file, "%d %f %f ", &l, &rod.rect.x, &rod.rect.y);
+    rod.rect.width = UNIT_ROD_WIDTH * l;
+    rod.rect.height = ROD_HEIGHT;
+    rod.color = colors[l];
+    rods[i] = rod;
   }
 }
 
@@ -281,7 +317,7 @@ int main(void) {
   Vector2 positions[100];
 
   bool config_error = false;
-  config_t cfg = read_config(&config_error, "config.cfg");
+  config_t cfg = LoadConfig(&config_error, "config.cfg");
   if (config_error) {
     return (EXIT_FAILURE);
   }
@@ -297,7 +333,7 @@ int main(void) {
   Rod rods[nb_rods];
 
   Signal signals[NB_RODS_MENU];
-  generate_signals(cfg, signals, nb_rods);
+  InitSignals(cfg, signals, nb_rods);
 
   int selected = -1;
   int deltaX = 0;
@@ -377,8 +413,8 @@ int main(void) {
 
           collided = true;
 
-          if (CollisionTopToBottom(rect1, rect2) ||
-              CollisionTopToBottom(rect2, rect1)) {
+          if (IsCollisionOnHorizontalAxis(rect1, rect2) ||
+              IsCollisionOnHorizontalAxis(rect2, rect1)) {
             if (rect1.y < rect2.y) {
               rods[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
