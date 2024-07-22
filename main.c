@@ -166,7 +166,7 @@ void SetSignalKind(config_t *cfg, SignalType *signalKind) {
   }
 }
 
-void InitSignals(config_t cfg, Signal signals[], int count) {
+void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
 
   char *signal_parameter_name = "signal_type";
   SignalType signal = SINE;
@@ -176,16 +176,16 @@ void InitSignals(config_t cfg, Signal signals[], int count) {
   for (i = 0; i < count; i++) {
     signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
     SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), i,
+        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), rods[i].rect.width/UNIT_ROD_WIDTH,
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_exp", 0xFF);
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)), rods[i].rect.width/UNIT_ROD_WIDTH,
+         "amplitude_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), i,
-        "duty_exp", 0xFF);
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), rods[i].rect.width/UNIT_ROD_WIDTH,
+        "duty_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), i,
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].rect.width/UNIT_ROD_WIDTH,
         "offset_expr", 0xFF);
   }
   printf("\n upthere %d\n", signals[i].amplitude);
