@@ -166,7 +166,7 @@ void SetSignalKind(config_t *cfg, SignalType *signalKind) {
   }
 }
 
-void InitSignals(config_t cfg, Signal *signals, int count) {
+void InitSignals(config_t cfg, Signal signals[], int count) {
   printf("wait what???\n\n\n");
 
   char *signal_parameter_name = "signal_type";
