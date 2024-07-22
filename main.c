@@ -167,7 +167,6 @@ void SetSignalKind(config_t *cfg, SignalType *signalKind) {
 }
 
 void InitSignals(config_t cfg, Signal signals[], int count) {
-  printf("wait what???\n\n\n");
 
   char *signal_parameter_name = "signal_type";
   SignalType signal = SINE;
@@ -181,16 +180,13 @@ void InitSignals(config_t cfg, Signal signals[], int count) {
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_exp", 0xFFFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_exp", 0xFFFF);
+        i, "amplitude_exp", 0xFF);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), i,
-        "duty_exp", 0xFFFF);
+        "duty_exp", 0xFF);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), i,
-        "offset_expr", 0xFFFF);
+        "offset_expr", 0xFF);
   }
   printf("\n upthere %d\n", signals[i].amplitude);
 
