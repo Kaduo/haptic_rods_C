@@ -385,7 +385,7 @@ int main(int argc, char **argv) {
   }
 
   Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals, nb_rods);
+  InitSignals(cfg, signals, nb_rods, rods);
   printf("\n HEY THERE %d\n", signals[0].amplitude);
   printf("\n HEY THERE %d\n", signals[1].amplitude);
   printf("\n HEY THERE %d\n", signals[0].amplitude);
