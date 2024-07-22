@@ -425,6 +425,7 @@ int main(int argc, char **argv) {
           deltaY = rods[i].rect.y - mousePosition.y;
 
           if (selected == 2) {
+            // FIXME FIXME
             printf("\n\n\n\n houatttt \n\n\n");
             f = fopen("WHATATAT.rods", "w");
             if (f == NULL) {
