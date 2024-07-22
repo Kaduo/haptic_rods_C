@@ -1,3 +1,2 @@
 #! /usr/bin/sh
-make -f MakefileD 
-./haptic_rods "$@"
+make -f MakefileD  && ./haptic_rods "$@"

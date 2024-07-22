@@ -6,9 +6,9 @@
 #include "tinyexpr.h"
 #include <fcntl.h>
 #include <libconfig.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
@@ -35,9 +35,10 @@ void DrawRods(Rod rods[], int nbRods) {
 void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
   int i;
   for (i = 0; i < 10; i++) {
-    rodsMenu[i + shift] = (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
-                                         (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
-                                .color = colors[i]};
+    rodsMenu[i + shift] =
+        (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
+                       (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
+              .color = colors[i]};
   }
 }
 
@@ -52,14 +53,11 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
     current_length += UNIT_ROD_WIDTH;
     for (j = 0; j < nbRodsPerLength[i]; j++) {
       if (current_length + x > screenWidth) {
-        printf("current length %d\n", current_length);
-        printf("x %d\n", x);
-        printf("width %d\n", screenWidth);
         x = 0;
         y += ROD_HEIGHT + 1;
       }
-      rods[k] = (Rod){.rect = {x, y, current_length, ROD_HEIGHT},
-                      .color = colors[i]};
+      rods[k] =
+          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i]};
       k += 1;
       x += current_length + 1;
     }
@@ -130,7 +128,8 @@ double ReadParameterFromSetting(config_setting_t *setting, char *exprName) {
   }
 }
 
-void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l, char *exprName, double mask) {
+void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l,
+                                char *exprName, double mask) {
   double my_l = l;
   te_variable vars[] = {{"l", &my_l}};
   te_expr *expr = GetConfigExpr(cfg, exprName, vars);
@@ -139,29 +138,30 @@ void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l, ch
   }
 }
 
-void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l, char *exprName, double mask) {
+void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
+                               char *exprName, double mask) {
   double my_l = l;
   te_variable vars[] = {{"l", &my_l}};
   te_expr *expr = GetConfigExpr(cfg, exprName, vars);
   if ((void *)expr != 0) {
     *parameter = (uint8_t)DoubleClamp(te_eval(expr), 0, mask);
   }
-  //printf("\n\n not there \n\n");
+  // printf("\n\n not there \n\n");
 }
 
 void SetSignalKind(config_t *cfg, SignalType *signalKind) {
   const char *signalName;
   if (config_lookup_string(cfg, "signal_type", &signalName)) {
     if (strcmp(signalName, "sine") == 0) {
-      *signalKind= SINE;
+      *signalKind = SINE;
     } else if (strcmp(signalName, "steady") == 0) {
-      *signalKind= STEADY;
+      *signalKind = STEADY;
     } else if (strcmp(signalName, "triangle") == 0) {
-      *signalKind= TRIANGLE;
+      *signalKind = TRIANGLE;
     } else if (strcmp(signalName, "front teeth") == 0) {
-      *signalKind= FRONT_TEETH;
+      *signalKind = FRONT_TEETH;
     } else if (strcmp(signalName, "back teeth") == 0) {
-      *signalKind= BACK_TEETH;
+      *signalKind = BACK_TEETH;
     }
   }
 }
@@ -175,11 +175,21 @@ void InitSignals(config_t cfg, Signal *signals, int count) {
   int i;
   for (i = 0; i < count; i++) {
     signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
-    SetExpr16ParameterOfSignal(&cfg, (uint16_t*)((char *)(&signals[i]) + offsetof(Signal, period)), i, "period_expr", 0xFFFF);
-    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, amplitude)), i, "amplitude_exp", 0xFFFF);
-    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, amplitude)), i, "amplitude_exp", 0xFFFF);
-    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, duty)), i, "duty_exp", 0xFFFF);
-    SetExpr8ParameterOfSignal(&cfg, (uint8_t*)((char*)(&signals[i]) + offsetof(Signal, offset)), i, "offset_expr", 0xFFFF);
+    SetExpr16ParameterOfSignal(
+        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), i,
+        "period_expr", 0xFFFF);
+    SetExpr8ParameterOfSignal(
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)),
+        i, "amplitude_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)),
+        i, "amplitude_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), i,
+        "duty_exp", 0xFFFF);
+    SetExpr8ParameterOfSignal(
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), i,
+        "offset_expr", 0xFFFF);
   }
 
   int per_rod = 0;
@@ -286,22 +296,31 @@ void InitSignals(config_t cfg, Signal *signals, int count) {
   }
 }
 
-void save_rods(Rod rods[], int nb_rods, FILE *file) {
+void SaveRods(Rod rods[], int nb_rods, FILE *file) {
+  printf("\n in saverods \n");
   int i;
-  for (i=0; i<nb_rods; i++) {
-    fprintf(file, "%d %f %f", (int)(rods[i].rect.width)/(int)UNIT_ROD_WIDTH, rods[i].rect.x, rods[i].rect.y);
+  printf("\n\n AS A POINTER %p \n\n", (void *)file);
+  int errno = fprintf(file, "%d ", nb_rods);
+  printf("\n\n A CLUE %d\n\n", errno);
+  perror("hello here");
+  for (i = 0; i < nb_rods; i++) {
+    printf("\n\n WHOUWHOU %d %d %d\n\n", (int)(rods[i].rect.width), (int)UNIT_ROD_WIDTH, (int)(rods[i].rect.width) / (int)UNIT_ROD_WIDTH);
+    fprintf(file, "%d %f %f ", (int)(rods[i].rect.width) / (int)UNIT_ROD_WIDTH,
+            rods[i].rect.x, rods[i].rect.y);
   }
 }
 
-void load_rods(FILE *file, int nb_rods, Rod rods[]) {
+void LoadRods(FILE *file, Rod rods[]) {
   int i;
-  for (i=0; i<nb_rods; i++) {
+  int nb_rods;
+  fscanf(file, "%d ", &nb_rods);
+  for (i = 0; i < nb_rods; i++) {
     Rod rod;
     int l;
     fscanf(file, "%d %f %f ", &l, &rod.rect.x, &rod.rect.y);
     rod.rect.width = UNIT_ROD_WIDTH * l;
     rod.rect.height = ROD_HEIGHT;
-    rod.color = colors[l];
+    rod.color = colors[l-1];
     rods[i] = rod;
   }
 }
@@ -314,10 +333,8 @@ int main(int argc, char **argv) {
 
   char *config_name;
   if (argc > 1) {
-      config_name = argv[1];
-      printf("\n\n MY CONFIG : %s \n\n", config_name);
+    config_name = argv[1];
   } else {
-    printf("\nhuh\n");
     config_name = "config.cfg";
   }
 
@@ -330,26 +347,13 @@ int main(int argc, char **argv) {
     return (EXIT_FAILURE);
   }
 
-  int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
-
-  int nb_rods = 0;
-  int i;
-  for (i=0; i<10; i++) {
-    nb_rods += nb_rods_per_color[i];
-      }
-
-  Rod rods[nb_rods];
-
-  Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals, nb_rods);
-
   int selected = -1;
   int deltaX = 0;
   int deltaY = 0;
 
   int display = GetCurrentMonitor();
-  //InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-   //            0);
+  // InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
+  //             0);
   /*InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
                10);
   InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
@@ -359,13 +363,41 @@ int main(int argc, char **argv) {
   ToggleFullscreen();
   SetTargetFPS(40);
 
-  InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
+  int nb_rods = 0;
+  FILE *f;
+  if (argc > 2) {
+    printf("huh\n");
+    f = fopen(argv[2], "r");
+    fscanf(f, "%d ", &nb_rods);
+    fclose(f);
+  } else {
+
+    int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
+
+    int i;
+    for (i = 0; i < 10; i++) {
+      nb_rods += nb_rods_per_color[i];
+    }
+  }
+
+  Rod rods[nb_rods];
+  if (argc > 2) {
+    f = fopen(argv[2], "r");
+    LoadRods(f, rods);
+    fclose(f);
+  } else {
+    printf("what oh yeah");
+    int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
+    InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
+  }
+
+  Signal signals[NB_RODS_MENU];
+  InitSignals(cfg, signals, nb_rods);
   set_direction(fd, 0, 100); // FIXME ?
 
   float time;
   time = 0;
   int j = 0;
-  i = 0;
 
   bool newly_collided = true;
   bool collided = false;
@@ -385,11 +417,24 @@ int main(int argc, char **argv) {
       times[j] = GetTime();
       positions[j] = mousePosition;
       j++;
+      int i;
       for (i = 0; i < nb_rods; i++) {
         if (CheckCollisionPointRec(mousePosition, rods[i].rect)) {
           selected = i;
           deltaX = rods[i].rect.x - mousePosition.x;
           deltaY = rods[i].rect.y - mousePosition.y;
+
+          if (selected == 2) {
+            printf("\n\n\n\n houatttt \n\n\n");
+            f = fopen("WHATATAT.rods", "w");
+            if (f == NULL) {
+              // Error, as expected.
+              perror("Error opening file");
+              exit(-1);
+            }
+            SaveRods(rods, nb_rods, f);
+            fclose(f);
+          }
 
           set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
           break;
@@ -412,6 +457,7 @@ int main(int argc, char **argv) {
       rods[selected].rect.x = mousePosition.x + deltaX;
       rods[selected].rect.y = mousePosition.y + deltaY;
 
+      int i;
       for (i = 0; i < nb_rods; i++) {
 
         Rectangle rect2 = rods[i].rect;
@@ -443,7 +489,7 @@ int main(int argc, char **argv) {
           no_collision_frame_count -= 1;
         } else if (collision_frame_count == 0 && newly_collided && collided) {
           Signal sig = signals[selected % NB_RODS_MENU];
-          collision_frame_count =2;
+          collision_frame_count = 2;
           sig.offset = 255;
           set_signal(fd, -1, -1, sig);
         }
@@ -475,8 +521,8 @@ int main(int argc, char **argv) {
       }
       // set_direction(fd, 0, 100); // FIXME ?
 
-      //set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
-      //printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
+      // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
     // Draw menu
