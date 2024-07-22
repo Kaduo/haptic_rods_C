@@ -115,7 +115,6 @@ te_expr *GetConfigExpr(config_t *cfg, char *expr_name, te_variable *vars) {
   if (config_lookup_string(cfg, expr_name, &string_expr)) {
     return te_compile(string_expr, vars, 1, &err);
   }
-  printf("\nNONONOONO\n");
   return 0;
 }
 
@@ -307,17 +306,26 @@ void load_rods(FILE *file, int nb_rods, Rod rods[]) {
   }
 }
 
-int main(void) {
+int main(int argc, char **argv) {
   int fd;
   fd = connect_to_tty();
   int collision_frame_count = 0;
   int no_collision_frame_count = 0;
 
+  char *config_name;
+  if (argc > 1) {
+      config_name = argv[1];
+      printf("\n\n MY CONFIG : %s \n\n", config_name);
+  } else {
+    printf("\nhuh\n");
+    config_name = "config.cfg";
+  }
+
   double times[100]; // FIXME
   Vector2 positions[100];
 
   bool config_error = false;
-  config_t cfg = LoadConfig(&config_error, "config.cfg");
+  config_t cfg = LoadConfig(&config_error, config_name);
   if (config_error) {
     return (EXIT_FAILURE);
   }
@@ -397,8 +405,8 @@ int main(void) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
       float dx = mousePosition.x + deltaX - rods[selected].rect.x;
       float dy = mousePosition.y + deltaY - rods[selected].rect.y;
-      float old_x = rods[selected].rect.x;
-      float old_y = rods[selected].rect.y;
+      float oldX = rods[selected].rect.x;
+      float oldY = rods[selected].rect.y;
       Rectangle rect1 = rods[selected].rect;
 
       rods[selected].rect.x = mousePosition.x + deltaX;
@@ -447,8 +455,8 @@ int main(void) {
 
           if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
               i != selected) {
-            rods[selected].rect.x = old_x;
-            rods[selected].rect.y = old_y;
+            rods[selected].rect.x = oldX;
+            rods[selected].rect.y = oldY;
           }
         }
       }
