@@ -297,14 +297,9 @@ void InitSignals(config_t cfg, Signal *signals, int count) {
 }
 
 void SaveRods(Rod rods[], int nb_rods, FILE *file) {
-  printf("\n in saverods \n");
   int i;
-  printf("\n\n AS A POINTER %p \n\n", (void *)file);
-  int errno = fprintf(file, "%d ", nb_rods);
-  printf("\n\n A CLUE %d\n\n", errno);
-  perror("hello here");
+  fprintf(file, "%d ", nb_rods);
   for (i = 0; i < nb_rods; i++) {
-    printf("\n\n WHOUWHOU %d %d %d\n\n", (int)(rods[i].rect.width), (int)UNIT_ROD_WIDTH, (int)(rods[i].rect.width) / (int)UNIT_ROD_WIDTH);
     fprintf(file, "%d %f %f ", (int)(rods[i].rect.width) / (int)UNIT_ROD_WIDTH,
             rods[i].rect.x, rods[i].rect.y);
   }
@@ -424,20 +419,21 @@ int main(int argc, char **argv) {
           deltaX = rods[i].rect.x - mousePosition.x;
           deltaY = rods[i].rect.y - mousePosition.y;
 
-          if (selected == 2) {
-            // FIXME FIXME
-            printf("\n\n\n\n houatttt \n\n\n");
-            f = fopen("WHATATAT.rods", "w");
-            if (f == NULL) {
-              // Error, as expected.
-              perror("Error opening file");
-              exit(-1);
-            }
-            SaveRods(rods, nb_rods, f);
-            fclose(f);
-          }
+          /* if (selected == 2) { */
+          /*   // FIXME FIXME */
+          /*   printf("\n\n\n\n houatttt \n\n\n"); */
+          /*   f = fopen("WHATATAT.rods", "w"); */
+          /*   if (f == NULL) { */
+          /*     // Error, as expected. */
+          /*     perror("Error opening file"); */
+          /*     exit(-1); */
+          /*   } */
+          /*   SaveRods(rods, nb_rods, f); */
+          /*   fclose(f); */
+          /* } */
 
           set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
+          printf("\nhmm %d\n", signals[i%NB_RODS_MENU].amplitude);
           break;
         }
       }
