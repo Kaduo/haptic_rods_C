@@ -167,6 +167,7 @@ void SetSignalKind(config_t *cfg, SignalType *signalKind) {
 }
 
 void InitSignals(config_t cfg, Signal *signals, int count) {
+  printf("wait what???\n\n\n");
 
   char *signal_parameter_name = "signal_type";
   SignalType signal = SINE;
@@ -191,6 +192,7 @@ void InitSignals(config_t cfg, Signal *signals, int count) {
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), i,
         "offset_expr", 0xFFFF);
   }
+  printf("\n upthere %d\n", signals[i].amplitude);
 
   int per_rod = 0;
   config_lookup_bool(&cfg, "per_rod", &per_rod);
@@ -388,6 +390,9 @@ int main(int argc, char **argv) {
 
   Signal signals[NB_RODS_MENU];
   InitSignals(cfg, signals, nb_rods);
+  printf("\n HEY THERE %d\n", signals[0].amplitude);
+  printf("\n HEY THERE %d\n", signals[1].amplitude);
+  printf("\n HEY THERE %d\n", signals[0].amplitude);
   set_direction(fd, 0, 100); // FIXME ?
 
   float time;
