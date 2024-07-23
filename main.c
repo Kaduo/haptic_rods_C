@@ -79,6 +79,7 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
     speed = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (GetFrameTime() - *oldTime);
   } else {
+    printf("ho come on\n");
     speed = 1000;
   }
   *oldTime = newTime;
