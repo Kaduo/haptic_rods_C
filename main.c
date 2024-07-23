@@ -328,6 +328,7 @@ int main(int argc, char **argv) {
   fd = connect_to_tty();
   int collision_frame_count = 0;
   int no_collision_frame_count = 0;
+  int frame_count = 0;
 
   char *config_name;
   if (argc > 1) {
@@ -407,6 +408,7 @@ int main(int argc, char **argv) {
     Vector2 mousePosition = GetMousePosition();
 
     collided = false;
+    frame_count += 1;
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       no_collision_frame_count = 3;
@@ -520,7 +522,9 @@ int main(int argc, char **argv) {
       // set_direction(fd, 0, 100); // FIXME ?
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
-      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      if (frame_count % 10 == 0) {
+        set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      }
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
