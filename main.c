@@ -75,11 +75,13 @@ bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2) {
 int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   float newTime = GetFrameTime();
   int speed;
+  float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
     printf("LONGUEUR %f\n", Vector2Length((Vector2){.x = deltaX, .y = deltaY}) );
-    speed = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
+    speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (newTime - *oldTime);
-    printf("%d\n", speed);
+    speed = floor(speedf);
+    printf("%f\n", speedf);
   } else {
     printf("ho come on\n");
     speed = 1000;
