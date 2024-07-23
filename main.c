@@ -361,7 +361,6 @@ int main(int argc, char **argv) {
   int nb_rods = 0;
   FILE *f;
   if (argc > 2) {
-    printf("huh\n");
     f = fopen(argv[2], "r");
     fscanf(f, "%d ", &nb_rods);
     fclose(f);
@@ -381,16 +380,12 @@ int main(int argc, char **argv) {
     LoadRods(f, rods);
     fclose(f);
   } else {
-    printf("what oh yeah");
     int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
     InitRods(rods, nb_rods_per_color, GetMonitorWidth(display));
   }
 
   Signal signals[NB_RODS_MENU];
   InitSignals(cfg, signals, nb_rods, rods);
-  printf("\n HEY THERE %d\n", signals[0].amplitude);
-  printf("\n HEY THERE %d\n", signals[1].amplitude);
-  printf("\n HEY THERE %d\n", signals[2].amplitude);
   set_direction(fd, 0, 100); // FIXME ?
 
   float time;
@@ -436,7 +431,7 @@ int main(int argc, char **argv) {
           /* } */
 
           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
-          printf(" amplitude %d\n\n", signals[rods[i].length - 1].amplitude);
+          printf("\n period %d\n\n", signals[rods[i].length - 1].period);
           break;
         }
       }
