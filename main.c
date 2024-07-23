@@ -520,6 +520,7 @@ int main(int argc, char **argv) {
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
       set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      printf("\n%d\n", ComputeSpeed(dx, dy, &time));
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
