@@ -435,8 +435,8 @@ int main(int argc, char **argv) {
           /*   fclose(f); */
           /* } */
 
+          printf("\n length %d\n", rods[i].length);
           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
-          printf("\nhmm %d\n", signals[i%NB_RODS_MENU].amplitude);
           break;
         }
       }
