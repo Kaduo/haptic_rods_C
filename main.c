@@ -254,6 +254,7 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
 
       if (setting != NULL) {
+        printf("\n HUH ?§§§!!! \n");
 
         double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
