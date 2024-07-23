@@ -77,11 +77,12 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   int speed;
   float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
+    float deltaTime = newTime - *oldTime;
     printf("LONGUEUR %f\n", Vector2Length((Vector2){.x = deltaX, .y = deltaY}) );
     speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (newTime - *oldTime);
     speed = floor(speedf);
-    printf("%f\n", speedf);
+    printf("delta time %f\n", deltaTime);
   } else {
     printf("ho come on\n");
     speed = 1000;
