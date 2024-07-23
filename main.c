@@ -522,9 +522,9 @@ int main(int argc, char **argv) {
       // set_direction(fd, 0, 100); // FIXME ?
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
-      /* if (frame_count % 10 == 0) { */
-      /*   set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME */
-      /* } */
+      if (frame_count % 80 == 0) {
+        set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      }
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
