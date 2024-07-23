@@ -257,6 +257,7 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
 
         double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
+          printf("\n Hey I'm set! \n");
           signals[i].period = DoubleClamp(period, 0, 0xFFFF);
         }
 
