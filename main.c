@@ -435,8 +435,8 @@ int main(int argc, char **argv) {
           /*   fclose(f); */
           /* } */
 
-          printf("\n length %d\n", rods[i].length);
           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
+          printf(" amplitude %d\n\n", signals[rods[i].length - 1].amplitude);
           break;
         }
       }
@@ -522,7 +522,7 @@ int main(int argc, char **argv) {
       // set_direction(fd, 0, 100); // FIXME ?
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
-      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      //set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
