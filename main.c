@@ -73,7 +73,7 @@ bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2) {
 }
 
 int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
-  float newTime = GetFrameTime();
+  float newTime = GetTime();
   int speed;
   float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
@@ -397,7 +397,7 @@ int main(int argc, char **argv) {
   set_direction(fd, 0, 10); // FIXME ?
 
   float time;
-  time = 0;
+  time = GetTime();
   int j = 0;
 
   bool newly_collided = true;
