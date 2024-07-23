@@ -40,7 +40,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
         (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
                        (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i],
-  .length = i};
+  .length = i + 1};
   }
 }
 
@@ -59,7 +59,7 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
         y += ROD_HEIGHT + 1;
       }
       rods[k] =
-          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i], .length = i};
+          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i], .length = i + 1};
       k += 1;
       x += current_length + 1;
     }
