@@ -78,6 +78,7 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
     speed = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (GetFrameTime() - *oldTime);
+    printf("%d\n", speed);
   } else {
     printf("ho come on\n");
     speed = 1000;
@@ -520,7 +521,6 @@ int main(int argc, char **argv) {
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
       set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
-      printf("\n%d\n", ComputeSpeed(dx, dy, &time));
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
