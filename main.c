@@ -123,7 +123,7 @@ const double PARAMETER_NOT_SET = -10;
 double ReadParameterFromSetting(config_setting_t *setting, char *exprName) {
   const char *string_expr;
   int err = 0;
-  if (config_setting_lookup_string(setting, exprName, &string_expr)) {
+  if (config_setting_lookup_string(setting, "period", &string_expr)) {
     return te_interp(string_expr, &err);
   } else {
     return PARAMETER_NOT_SET;
@@ -254,7 +254,6 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
       config_setting_t *setting = config_lookup(&cfg, groups[i]);
 
       if (setting != NULL) {
-        printf("\n HUH ?§§§!!! \n");
 
         double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
