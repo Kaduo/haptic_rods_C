@@ -22,6 +22,7 @@ const Color colors[] = {LIGHTGRAY, RED,   GREEN, PURPLE, YELLOW,
 typedef struct Rod {
   Rectangle rect;
   Color color;
+  int length;
 } Rod;
 
 void DrawRods(Rod rods[], int nbRods) {
@@ -38,7 +39,8 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
     rodsMenu[i + shift] =
         (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
                        (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
-              .color = colors[i]};
+              .color = colors[i],
+  .length = i};
   }
 }
 
@@ -57,7 +59,7 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
         y += ROD_HEIGHT + 1;
       }
       rods[k] =
-          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i]};
+          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i], .length = i};
       k += 1;
       x += current_length + 1;
     }
@@ -388,7 +390,7 @@ int main(int argc, char **argv) {
   InitSignals(cfg, signals, nb_rods, rods);
   printf("\n HEY THERE %d\n", signals[0].amplitude);
   printf("\n HEY THERE %d\n", signals[1].amplitude);
-  printf("\n HEY THERE %d\n", signals[0].amplitude);
+  printf("\n HEY THERE %d\n", signals[2].amplitude);
   set_direction(fd, 0, 100); // FIXME ?
 
   float time;
@@ -433,7 +435,7 @@ int main(int argc, char **argv) {
           /*   fclose(f); */
           /* } */
 
-          set_signal(fd, -1, -1, signals[i % NB_RODS_MENU]);
+          set_signal(fd, -1, -1, signals[rods[i].length - 1]);
           printf("\nhmm %d\n", signals[i%NB_RODS_MENU].amplitude);
           break;
         }
@@ -519,7 +521,8 @@ int main(int argc, char **argv) {
       }
       // set_direction(fd, 0, 100); // FIXME ?
 
-      // set_direction(fd, compute_angle(dx, dy), compute_speed(dx, dy, &time));
+      //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
+      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
