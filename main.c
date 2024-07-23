@@ -123,7 +123,7 @@ const double PARAMETER_NOT_SET = -10;
 double ReadParameterFromSetting(config_setting_t *setting, char *exprName) {
   const char *string_expr;
   int err = 0;
-  if (config_setting_lookup_string(setting, "period", &string_expr)) {
+  if (config_setting_lookup_string(setting, exprName, &string_expr)) {
     return te_interp(string_expr, &err);
   } else {
     return PARAMETER_NOT_SET;
@@ -518,7 +518,7 @@ int main(int argc, char **argv) {
       // set_direction(fd, 0, 100); // FIXME ?
 
       //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
-      //set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
 
