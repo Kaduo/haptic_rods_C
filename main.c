@@ -536,6 +536,7 @@ int main(int argc, char **argv) {
     DrawRods(rods, nb_rods);
 
     EndDrawing();
+    // Maîtriser les techniques
   }
 
   CloseWindow();
