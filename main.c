@@ -180,16 +180,16 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
   for (i = 0; i < count; i++) {
     signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
     SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), rods[i].rect.width/UNIT_ROD_WIDTH,
+        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), rods[i].length,
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)), rods[i].rect.width/UNIT_ROD_WIDTH,
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)), rods[i].length,
          "amplitude_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), rods[i].rect.width/UNIT_ROD_WIDTH,
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), rods[i].length,
         "duty_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].rect.width/UNIT_ROD_WIDTH,
+        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].length,
         "offset_expr", 0xFF);
   }
 
@@ -301,7 +301,7 @@ void SaveRods(Rod rods[], int nb_rods, FILE *file) {
   int i;
   fprintf(file, "%d ", nb_rods);
   for (i = 0; i < nb_rods; i++) {
-    fprintf(file, "%d %f %f ", (int)(rods[i].rect.width) / (int)UNIT_ROD_WIDTH,
+    fprintf(file, "%d %f %f ", rods[i].length,
             rods[i].rect.x, rods[i].rect.y);
   }
 }
