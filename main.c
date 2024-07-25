@@ -77,13 +77,13 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   int speed;
   float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
-    float deltaTime = newTime - *oldTime;
     speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (newTime - *oldTime);
     speed = floor(speedf);
   } else {
     speed = 1000;
   }
+  printf("\n speed %d \n", speed);
   *oldTime = newTime;
   return abs(speed);
 }
@@ -151,7 +151,6 @@ void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
   if ((void *)expr != 0) {
     *parameter = (uint8_t)DoubleClamp(te_eval(expr), 0, mask);
   }
-  // printf("\n\n not there \n\n");
 }
 
 void SetSignalKind(config_t *cfg, SignalType *signalKind) {
@@ -435,7 +434,6 @@ int main(int argc, char **argv) {
           /* } */
 
           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
-          printf("\n period %d\n\n", signals[rods[i].length - 1].period);
           break;
         }
       }
