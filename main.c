@@ -197,6 +197,7 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].length,
         "offset_expr", 0xFF);
   }
+  printf("\namplitude of max rod : %d\n", signals[9].amplitude);
 
   int per_rod = 0;
   config_lookup_bool(&cfg, "per_rod", &per_rod);
