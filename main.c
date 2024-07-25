@@ -155,7 +155,7 @@ void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
   printf("\nexpression %s\n", exprName);
   printf("\n l %f\n", l);
   printf("\n value?? %f\n", te_eval(expr));
-  printf("\n what %f\n", DoubleClamp(te_eval(expr), 0, mask));
+  printf("\n what %d\n", (uint8_t)DoubleClamp(te_eval(expr), 0, mask));
 }
 
 void SetSignalKind(config_t *cfg, SignalType *signalKind) {
