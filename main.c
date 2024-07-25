@@ -94,6 +94,7 @@ int ComputeAngle(float deltaX, float deltaY) {
 }
 
 double DoubleClamp(double d, double min, double max) {
+  printf("before clam ?! %f\n", d);
   const double t = d < min ? min : d;
   return t > max ? max : t;
 }
