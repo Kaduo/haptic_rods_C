@@ -78,13 +78,10 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
     float deltaTime = newTime - *oldTime;
-    printf("LONGUEUR %f\n", Vector2Length((Vector2){.x = deltaX, .y = deltaY}) );
     speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
             (newTime - *oldTime);
     speed = floor(speedf);
-    printf("delta time %f\n", deltaTime);
   } else {
-    printf("ho come on\n");
     speed = 1000;
   }
   *oldTime = newTime;
@@ -196,7 +193,6 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
         &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].rect.width/UNIT_ROD_WIDTH,
         "offset_expr", 0xFF);
   }
-  printf("\n upthere %d\n", signals[i].amplitude);
 
   int per_rod = 0;
   config_lookup_bool(&cfg, "per_rod", &per_rod);
@@ -263,7 +259,6 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
 
         double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET) {
-          printf("\n Hey I'm set! \n");
           signals[i].period = DoubleClamp(period, 0, 0xFFFF);
         }
 
@@ -521,7 +516,7 @@ int main(int argc, char **argv) {
         }
       } else if (!collided && !original_signal) {
         original_signal = true;
-        set_signal(fd, -1, -1, signals[selected % NB_RODS_MENU]);
+        set_signal(fd, -1, -1, signals[rods[selected].length - 1]);
       }
       // set_direction(fd, 0, 100); // FIXME ?
 
