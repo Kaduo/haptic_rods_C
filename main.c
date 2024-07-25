@@ -175,7 +175,7 @@ void SetSignalKind(config_t *cfg, SignalType *signalKind) {
   }
 }
 
-void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
+void InitSignals(config_t cfg, Signal signals[]) {
 
   char *signal_parameter_name = "signal_type";
   SignalType signal = SINE;
@@ -197,7 +197,6 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, offset)), i,
         "offset_expr", 0xFF);
   }
-  printf("\namplitude of max rod : %d\n", signals[9].amplitude);
 
   int per_rod = 0;
   config_lookup_bool(&cfg, "per_rod", &per_rod);
@@ -395,7 +394,7 @@ int main(int argc, char **argv) {
   }
 
   Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals, nb_rods, rods);
+  InitSignals(cfg, signals);
   set_direction(fd, 0, 10); // FIXME ?
 
   float time;
