@@ -141,6 +141,11 @@ void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l,
   if ((void *)expr != 0) {
     *parameter = (uint16_t)DoubleClamp(te_eval(expr), 0, mask);
   }
+
+  printf("\nexpression %s\n", exprName);
+  printf("\n l %f\n", l);
+  printf("\n value?? %f\n", te_eval(expr));
+  printf("\n what %f\n", DoubleClamp(te_eval(expr), 0, mask));
 }
 
 void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
