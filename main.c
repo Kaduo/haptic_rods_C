@@ -182,22 +182,23 @@ void InitSignals(config_t cfg, Signal signals[], int count, Rod rods[]) {
   SetSignalKind(&cfg, &signal);
 
   int i;
-  for (i = 0; i < count; i++) {
+  for (i = 0; i < 10; i++) {
     signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
     SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((char *)(&signals[i]) + offsetof(Signal, period)), rods[i].length,
+        &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), rods[i].length,
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, amplitude)), rods[i].length,
+        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)), rods[i].length,
          "amplitude_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, duty)), rods[i].length,
+        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), rods[i].length,
         "duty_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((char *)(&signals[i]) + offsetof(Signal, offset)), rods[i].length,
+        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, offset)), rods[i].length,
         "offset_expr", 0xFF);
   }
   printf("\namplitude of max rod : %d\n", signals[9].amplitude);
+  printf("\n length of max rod : %d\n", rods[9].length);
 
   int per_rod = 0;
   config_lookup_bool(&cfg, "per_rod", &per_rod);
