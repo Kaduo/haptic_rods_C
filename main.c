@@ -40,7 +40,7 @@ void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift) {
         (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
                        (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
               .color = colors[i],
-  .length = i + 1};
+              .length = i + 1};
   }
 }
 
@@ -58,8 +58,9 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
         x = 0;
         y += ROD_HEIGHT + 1;
       }
-      rods[k] =
-          (Rod){.rect = {x, y, current_length, ROD_HEIGHT}, .color = colors[i], .length = i + 1};
+      rods[k] = (Rod){.rect = {x, y, current_length, ROD_HEIGHT},
+                      .color = colors[i],
+                      .length = i + 1};
       k += 1;
       x += current_length + 1;
     }
@@ -78,7 +79,7 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   float speedf;
   if ((*oldTime != 0) && (newTime - *oldTime != 0)) {
     speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
-            (newTime - *oldTime);
+             (newTime - *oldTime);
     speed = floor(speedf);
   } else {
     speed = 1000;
@@ -141,7 +142,6 @@ void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l,
   if ((void *)expr != 0) {
     *parameter = (uint16_t)DoubleClamp(te_eval(expr), 0, mask);
   }
-
 }
 
 void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
@@ -188,8 +188,8 @@ void InitSignals(config_t cfg, Signal signals[]) {
         &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)), i,
-         "amplitude_expr", 0xFF);
+        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
+        i, "amplitude_expr", 0xFF);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
         "duty_expr", 0xFF);
@@ -308,8 +308,7 @@ void SaveRods(Rod rods[], int nb_rods, FILE *file) {
   int i;
   fprintf(file, "%d ", nb_rods);
   for (i = 0; i < nb_rods; i++) {
-    fprintf(file, "%d %f %f ", rods[i].length,
-            rods[i].rect.x, rods[i].rect.y);
+    fprintf(file, "%d %f %f ", rods[i].length, rods[i].rect.x, rods[i].rect.y);
   }
 }
 
@@ -323,7 +322,7 @@ void LoadRods(FILE *file, Rod rods[]) {
     fscanf(file, "%d %f %f ", &l, &rod.rect.x, &rod.rect.y);
     rod.rect.width = UNIT_ROD_WIDTH * l;
     rod.rect.height = ROD_HEIGHT;
-    rod.color = colors[l-1];
+    rod.color = colors[l - 1];
     rods[i] = rod;
   }
 }
@@ -333,7 +332,6 @@ int main(int argc, char **argv) {
   fd = connect_to_tty();
   int collision_frame_count = 0;
   int no_collision_frame_count = 0;
-  int frame_count = 0;
 
   char *config_name;
   if (argc > 1) {
@@ -342,8 +340,11 @@ int main(int argc, char **argv) {
     config_name = "config.cfg";
   }
 
-  double times[100]; // FIXME
-  Vector2 positions[100];
+  double times[40 * 60 * 10]; // FIXME
+  Vector2 positions[40 * 60 * 10];
+
+  times[0] = GetFrameTime();
+  int frameCount = 1;
 
   bool config_error = false;
   config_t cfg = LoadConfig(&config_error, config_name);
@@ -383,6 +384,7 @@ int main(int argc, char **argv) {
     }
   }
 
+
   Rod rods[nb_rods];
   if (argc > 2) {
     f = fopen(argv[2], "r");
@@ -399,12 +401,12 @@ int main(int argc, char **argv) {
 
   float time;
   time = GetTime();
-  int j = 0;
 
   bool newly_collided = true;
   bool collided = false;
   bool original_signal = true;
 
+  Rod rods_history[40*60*10][nb_rods];
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -413,13 +415,9 @@ int main(int argc, char **argv) {
     Vector2 mousePosition = GetMousePosition();
 
     collided = false;
-    frame_count += 1;
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       no_collision_frame_count = 3;
-      times[j] = GetTime();
-      positions[j] = mousePosition;
-      j++;
       int i;
       for (i = 0; i < nb_rods; i++) {
         if (CheckCollisionPointRec(mousePosition, rods[i].rect)) {
@@ -429,7 +427,6 @@ int main(int argc, char **argv) {
 
           /* if (selected == 2) { */
           /*   // FIXME FIXME */
-          /*   printf("\n\n\n\n houatttt \n\n\n"); */
           /*   f = fopen("WHATATAT.rods", "w"); */
           /*   if (f == NULL) { */
           /*     // Error, as expected. */
@@ -452,6 +449,9 @@ int main(int argc, char **argv) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
+      times[frameCount] = GetFrameTime();
+      positions[frameCount] = mousePosition;
+      frameCount += 1;
       float dx = mousePosition.x + deltaX - rods[selected].rect.x;
       float dy = mousePosition.y + deltaY - rods[selected].rect.y;
       float oldX = rods[selected].rect.x;
@@ -460,7 +460,6 @@ int main(int argc, char **argv) {
 
       rods[selected].rect.x = mousePosition.x + deltaX;
       rods[selected].rect.y = mousePosition.y + deltaY;
-      printf("%d\n", signals[rods[selected].length - 1].amplitude);
 
       int i;
       for (i = 0; i < nb_rods; i++) {
@@ -526,9 +525,10 @@ int main(int argc, char **argv) {
       }
       // set_direction(fd, 0, 100); // FIXME ?
 
-      //set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time)); // FIXME
+      // set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time));
+      // // FIXME
       /* if (frame_count % 80 == 0) { */
-        set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
+      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
       /* } */
       // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
     }
