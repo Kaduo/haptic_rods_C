@@ -453,6 +453,7 @@ int main(int argc, char **argv) {
 
       rods[selected].rect.x = mousePosition.x + deltaX;
       rods[selected].rect.y = mousePosition.y + deltaY;
+      printf("%d\n", signals[rods[selected].length - 1].amplitude);
 
       int i;
       for (i = 0; i < nb_rods; i++) {
