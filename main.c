@@ -343,7 +343,7 @@ int main(int argc, char **argv) {
   double times[40 * 60 * 10]; // FIXME
   Vector2 positions[40 * 60 * 10];
 
-  times[0] = GetFrameTime();
+  times[0] = GetTime();
   int frameCount = 1;
 
   bool config_error = false;
@@ -449,7 +449,7 @@ int main(int argc, char **argv) {
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
-      times[frameCount] = GetFrameTime();
+      times[frameCount] = GetTime();
       positions[frameCount] = mousePosition;
       frameCount += 1;
       float dx = mousePosition.x + deltaX - rods[selected].rect.x;
@@ -535,6 +535,7 @@ int main(int argc, char **argv) {
 
     // Draw menu
     DrawRods(rods, nb_rods);
+    DrawFPS(0, 0);
 
     EndDrawing();
     // Maîtriser les techniques
