@@ -366,7 +366,7 @@ int main(int argc, char **argv) {
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
-  SetTargetFPS(40);
+  //SetTargetFPS(40);
 
   int nb_rods = 0;
   FILE *f;
