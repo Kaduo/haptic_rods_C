@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
     fclose(f);
   } else {
 
-    int nb_rods_per_color[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    int nb_rods_per_color[10] = {3, 2, 1, 4, 2, 1, 2, 2, 3, 4};
 
     int i;
     for (i = 0; i < 10; i++) {
