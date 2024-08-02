@@ -492,7 +492,7 @@ int main(int argc, char **argv) {
         if (no_collision_frame_count > 0) {
           no_collision_frame_count -= 1;
         } else if (collision_frame_count == 0 && newly_collided && collided) {
-          Signal sig = signals[selected % NB_RODS_MENU];
+          Signal sig = signals[rods[selected].length -1 ];
           collision_frame_count = 2;
           sig.offset = 255;
           set_signal(fd, -1, -1, sig);
