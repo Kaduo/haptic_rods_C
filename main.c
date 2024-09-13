@@ -84,7 +84,6 @@ int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
   } else {
     speed = 1000;
   }
-  printf("\n speed %d \n", speed);
   *oldTime = newTime;
   return abs(speed);
 }
@@ -152,10 +151,6 @@ void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
   if ((void *)expr != 0) {
     *parameter = (uint8_t)DoubleClamp(te_eval(expr), 0, mask);
   }
-  printf("\nexpression %s\n", exprName);
-  printf("\n l %f\n", l);
-  printf("\n value?? %f\n", te_eval(expr));
-  printf("\n what %d\n", (uint8_t)DoubleClamp(te_eval(expr), 0, mask));
 }
 
 void SetSignalKind(config_t *cfg, SignalType *signalKind) {
@@ -250,8 +245,6 @@ void InitSignals(config_t cfg, Signal signals[]) {
     }
   }
 
-  printf("\namplitude of max rod : %d\n", signals[9].amplitude);
-
   int per_group = 0;
   config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group) {
@@ -319,7 +312,11 @@ void LoadRods(FILE *file, Rod rods[]) {
   for (i = 0; i < nb_rods; i++) {
     Rod rod;
     int l;
-    fscanf(file, "%d %f %f ", &l, &rod.rect.x, &rod.rect.y);
+    float x;
+    float y;
+    fscanf(file, "%d %f %f ", &l, &x, &y);
+    rod.rect.x = x;
+    rod.rect.y = y;
     rod.rect.width = UNIT_ROD_WIDTH * l;
     rod.rect.height = ROD_HEIGHT;
     rod.color = colors[l - 1];
@@ -357,12 +354,6 @@ int main(int argc, char **argv) {
   int deltaY = 0;
 
   int display = GetCurrentMonitor();
-  // InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-  //             0);
-  /*InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-               10);
-  InitRodsMenu(rodsMenu, GetMonitorWidth(display), GetMonitorHeight(display),
-               20);*/
 
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   ToggleFullscreen();
@@ -407,6 +398,7 @@ int main(int argc, char **argv) {
   bool original_signal = true;
 
   Rod rods_history[40*60*10][nb_rods];
+
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -415,6 +407,7 @@ int main(int argc, char **argv) {
     Vector2 mousePosition = GetMousePosition();
 
     collided = false;
+
     // Selection logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       no_collision_frame_count = 3;
@@ -424,18 +417,6 @@ int main(int argc, char **argv) {
           selected = i;
           deltaX = rods[i].rect.x - mousePosition.x;
           deltaY = rods[i].rect.y - mousePosition.y;
-
-          /* if (selected == 2) { */
-          /*   // FIXME FIXME */
-          /*   f = fopen("WHATATAT.rods", "w"); */
-          /*   if (f == NULL) { */
-          /*     // Error, as expected. */
-          /*     perror("Error opening file"); */
-          /*     exit(-1); */
-          /*   } */
-          /*   SaveRods(rods, nb_rods, f); */
-          /*   fclose(f); */
-          /* } */
 
           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
           break;
@@ -512,7 +493,7 @@ int main(int argc, char **argv) {
       }
 
       newly_collided = !collided;
-      // Signal sig = signals[selected];
+
       if (collision_frame_count > 0) {
         collision_frame_count -= 1;
         if (collision_frame_count == 0) {
@@ -523,14 +504,18 @@ int main(int argc, char **argv) {
         original_signal = true;
         set_signal(fd, -1, -1, signals[rods[selected].length - 1]);
       }
-      // set_direction(fd, 0, 100); // FIXME ?
-
-      // set_direction(fd, ComputeAngle(dx, dy), ComputeSpeed(dx, dy, &time));
-      // // FIXME
-      /* if (frame_count % 80 == 0) { */
       set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
-      /* } */
-      // printf("%d %d", compute_angle(dx,dy), compute_speed(dx, dy, &time));
+    } // End of move logic
+
+    if (IsKeyPressed(KEY_S)) {
+       f = fopen("latest.rods", "w");
+       if (f == NULL) {
+          // Error, as expected.
+          perror("Error opening file");
+          exit(-1);
+        }
+      SaveRods(rods, nb_rods, f);
+      fclose(f);
     }
 
     // Draw menu
@@ -538,8 +523,7 @@ int main(int argc, char **argv) {
     DrawFPS(0, 0);
 
     EndDrawing();
-    // Maîtriser les techniques
-  }
+  } // End of main loop
 
   CloseWindow();
 
