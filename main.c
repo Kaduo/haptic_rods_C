@@ -446,17 +446,17 @@ int main(int argc, char **argv) {
 
           if (IsCollisionOnHorizontalAxis(rect1, rect2) ||
               IsCollisionOnHorizontalAxis(rect2, rect1)) {
-            if (rect1.y < rect2.y) {
-              rods[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
+            if (rect1.y <= rect2.y) {
+              rods[selected].rect.y = rect2.y - ROD_HEIGHT;
             } else {
-              rods[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
+              rods[selected].rect.y = rect2.y + ROD_HEIGHT;
             }
           } else {
             if (rect1.x < rect2.x) {
 
-              rods[selected].rect.x = rect2.x - rect1.width - 1;
+              rods[selected].rect.x = rect2.x - rect1.width;
             } else {
-              rods[selected].rect.x = rect2.x + rect2.width + 1;
+              rods[selected].rect.x = rect2.x + rect2.width;
             }
           }
         }
