@@ -21,6 +21,8 @@ const Color colors[] = {LIGHTGRAY, RED,   GREEN, PURPLE, YELLOW,
 
 const double PARAMETER_NOT_SET = -10;
 
+const char* DEFAULT_CONFIG = "config.cfg";
+
 typedef struct Rod {
   Rectangle rect;
   Color color;
@@ -338,7 +340,7 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     config_name = argv[1];
   } else {
-    config_name = "config.cfg";
+    config_name = DEFAULT_CONFIG;
   }
 
   bool config_error = false;
