@@ -70,9 +70,9 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth) {
 }
 
 bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2) {
-  return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
-         ((rect2.x < rect1.x + rect1.width) &&
-          (rect1.x + rect1.width < rect2.x + rect2.width));
+  return ((rect2.x <= rect1.x) && (rect1.x <= rect2.x + rect2.width)) ||
+         ((rect2.x <= rect1.x + rect1.width) &&
+          (rect1.x + rect1.width <= rect2.x + rect2.width));
 }
 
 int ComputeSpeed(float deltaX, float deltaY, float *oldTime) {
@@ -452,7 +452,7 @@ int main(int argc, char **argv) {
               rods[selected].rect.y = rect2.y + ROD_HEIGHT;
             }
           } else {
-            if (rect1.x < rect2.x) {
+            if (rect1.x <= rect2.x) {
 
               rods[selected].rect.x = rect2.x - rect1.width;
             } else {
