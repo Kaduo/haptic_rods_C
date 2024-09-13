@@ -19,6 +19,8 @@ const int ROD_HEIGHT = 40;
 const Color colors[] = {LIGHTGRAY, RED,   GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE,   ORANGE};
 
+const double PARAMETER_NOT_SET = -10;
+
 typedef struct Rod {
   Rectangle rect;
   Color color;
@@ -120,8 +122,6 @@ te_expr *GetConfigExpr(config_t *cfg, char *expr_name, te_variable *vars) {
   }
   return 0;
 }
-
-const double PARAMETER_NOT_SET = -10;
 
 double ReadParameterFromSetting(config_setting_t *setting, char *exprName) {
   const char *string_expr;
@@ -325,8 +325,12 @@ void LoadRods(FILE *file, Rod rods[]) {
 }
 
 int main(int argc, char **argv) {
+  
+  // Establish connection to haptic controller
   int fd;
   fd = connect_to_tty();
+
+
   int collision_frame_count = 0;
   int no_collision_frame_count = 0;
 
@@ -336,12 +340,6 @@ int main(int argc, char **argv) {
   } else {
     config_name = "config.cfg";
   }
-
-  double times[40 * 60 * 10]; // FIXME
-  Vector2 positions[40 * 60 * 10];
-
-  times[0] = GetTime();
-  int frameCount = 1;
 
   bool config_error = false;
   config_t cfg = LoadConfig(&config_error, config_name);
@@ -397,8 +395,6 @@ int main(int argc, char **argv) {
   bool collided = false;
   bool original_signal = true;
 
-  Rod rods_history[40*60*10][nb_rods];
-
   // Main loop
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -426,13 +422,9 @@ int main(int argc, char **argv) {
       selected = -1;
       clear_signal(fd);
       collision_frame_count = 0;
-      // play_signal(fd, 0); FIXME
     }
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0) {
-      times[frameCount] = GetTime();
-      positions[frameCount] = mousePosition;
-      frameCount += 1;
       float dx = mousePosition.x + deltaX - rods[selected].rect.x;
       float dy = mousePosition.y + deltaY - rods[selected].rect.y;
       float oldX = rods[selected].rect.x;
@@ -457,7 +449,6 @@ int main(int argc, char **argv) {
             if (rect1.y < rect2.y) {
               rods[selected].rect.y = rect2.y - ROD_HEIGHT - 1;
             } else {
-
               rods[selected].rect.y = rect2.y + ROD_HEIGHT + 1;
             }
           } else {
