@@ -584,7 +584,9 @@ int main(int argc, char **argv)
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
   printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
   //InitWindow(300, 300, "HapticRods");
-  ToggleFullscreen();
+  #ifdef FULLSCREEN
+    ToggleFullscreen();
+  #endif
   SetTargetFPS(40);
 
   // Main loop
