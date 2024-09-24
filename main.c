@@ -500,6 +500,9 @@ RodGroup *CreateRodGroupFromSpec(const char *spec_name)
   int nb_rods;
   FILE *f;
   f = fopen(spec_name, "r");
+  if (f == NULL) {
+    perror(NULL);
+  }
   fscanf(f, "%d ", &nb_rods);
   RodGroup *rod_group = malloc(sizeof(RodGroup) + nb_rods * sizeof(Rod));
   rod_group->nb_rods = nb_rods;
