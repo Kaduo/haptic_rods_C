@@ -22,6 +22,9 @@ const int SELECTION_COUNTDOWN = 3;
 const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE, ORANGE};
 
+const int TABLET_WIDTH = 1600;
+const int TABLED_HEIGHT = 600;
+
 const double PARAMETER_NOT_SET = -10;
 
 static const char DEFAULT_CONFIG[] = "config.cfg";
@@ -585,12 +588,14 @@ int main(int argc, char **argv)
   int signalMustPlayFrameCount = 0;
 
 
-  int display = GetCurrentMonitor();
-  InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
-  printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
+  InitWindow(TABLET_WIDTH, TABLED_HEIGHT, "HapticRods");
+  
+  
+  //int display = GetCurrentMonitor();
+  //printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
   //InitWindow(300, 300, "HapticRods");
+  
   #ifdef FULLSCREEN
-    printf("\n\n HIHIHIHI \n\n”");
     ToggleFullscreen();
   #endif
   SetTargetFPS(40);
