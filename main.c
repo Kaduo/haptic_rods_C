@@ -16,6 +16,7 @@
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 40;
 const int ROD_HEIGHT = 40;
+const int SELECTION_COUNTDOWN = 3;
 const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE, ORANGE};
 
@@ -38,10 +39,70 @@ typedef struct RodGroup
 } RodGroup;
 
 typedef struct SelectionState {
-  int selectedIdx;
+  bool selected;
+  Rod *selectedRod;
+  int selectionCountdown;
   int offsetX;
   int offsetY;
 } SelectionState;
+
+SelectionState InitSelectionState() {
+  SelectionState s;
+  s.selected = false;
+  s.selectionCountdown = 0;
+  s.offsetX = 0;
+  s.offsetY = 0;
+  return  s;
+}
+
+void SelectRod(SelectionState *s, Rod *rod, Vector2 mousePosition) {
+  s->selected = true;
+  s->selectedRod = rod;
+  s->selectionCountdown = SELECTION_COUNTDOWN;
+  s->offsetX = rod->rect.x - mousePosition.x;
+  s->offsetY = rod->rect.y - mousePosition.y;
+}
+
+void UnselectRod(SelectionState *s) {
+  s->selected = false;
+  s->selectionCountdown = 0;
+}
+
+typedef struct CollisionState {
+  
+} CollisionState;
+
+// void UpdateSelectionState(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition) {
+//     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+//     {
+
+//       /* Right after selecting a rod, there is a short period during
+//       which its signal is guaranteed to play, even if there is a collision.*/
+//       signalMustPlayFrameCount = 3;
+
+//       // For each rod, check if it's under the mouse.
+//       int i;
+//       for (i = 0; i < rodGroup->nb_rods; i++)
+//       {
+//         if (CheckCollisionPointRec(mousePosition, rodGroup->rods[i].rect))
+//         {
+//           s->selectedIdx = i;
+//           s->offsetX = rodGroup->rods[i].rect.x - mousePosition.x;
+//           s->offsetY = rodGroup->rods[i].rect.y - mousePosition.y;
+
+//           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
+//           break;
+//         }
+//       }
+//     }
+//     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+//     {
+//       selected = -1;
+//       clear_signal(fd);
+//       collision_frame_count = 0;
+//     }
+
+// }
 
 Rod CreateRod(int l, float x, float y) {
   Rod rod;
@@ -516,11 +577,13 @@ int main(int argc, char **argv)
   int pointerOffsetY = 0;
 
   int collision_frame_count = 0;
-  int no_collision_frame_count = 0;
+  int signalMustPlayFrameCount = 0;
 
 
   int display = GetCurrentMonitor();
   InitWindow(GetMonitorWidth(display), GetMonitorHeight(display), "HapticRods");
+  printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
+  //InitWindow(300, 300, "HapticRods");
   ToggleFullscreen();
   SetTargetFPS(40);
 
@@ -540,15 +603,21 @@ int main(int argc, char **argv)
 
       /* Right after selecting a rod, there is a short period during
       which its signal is guaranteed to play, even if there is a collision.*/
-      no_collision_frame_count = 3;
+      signalMustPlayFrameCount = 3;
 
       // For each rod, check if it's under the mouse.
       int i;
       for (i = 0; i < nb_rods; i++)
       {
+
+        // If a rod is under the mouse, mark it as selected.
         if (CheckCollisionPointRec(mousePosition, rods[i].rect))
         {
           selected = i;
+
+          // Record the distance between the rod's origin and the mouse pointer.
+          // As long as the rod is selected, this distance will be kept constant
+          // on the axes along which the rod is free to move.
           pointerOffsetX = rods[i].rect.x - mousePosition.x;
           pointerOffsetY = rods[i].rect.y - mousePosition.y;
 
@@ -557,7 +626,7 @@ int main(int argc, char **argv)
         }
       }
     }
-    else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
       selected = -1;
       clear_signal(fd);
@@ -566,17 +635,31 @@ int main(int argc, char **argv)
     // <-- Selection logic
 
     // Movement logic ->>
+
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0)
     {
+
+      // Record the pointer's displacement to compute its speed.
+      // Its speed is then used to compute the signal.
       float dx = mousePosition.x + pointerOffsetX - rods[selected].rect.x;
       float dy = mousePosition.y + pointerOffsetY - rods[selected].rect.y;
+
+      // Record the current position of the selected rectangle,
+      // so that it may be used to undo the move in case of an accidental merging.
       float oldX = rods[selected].rect.x;
       float oldY = rods[selected].rect.y;
+
+      // TODO: cleanup: rename rect1 (selectedRect ?), and test if we can use it everywhere
+      // instead of the verbose rods[selected].rect.
+      // Furthermore, see if we can do the same with the rod itself, 
+      // something like selectedRod = rods[selected].
       Rectangle rect1 = rods[selected].rect;
 
+      // Move the selected rod so that it sticks to the pointer.
       rods[selected].rect.x = mousePosition.x + pointerOffsetX;
       rods[selected].rect.y = mousePosition.y + pointerOffsetY;
 
+      // For each rod, check if it is colliding with the selected rod.
       int i;
       for (i = 0; i < nb_rods; i++)
       {
@@ -592,34 +675,41 @@ int main(int argc, char **argv)
           if (IsCollisionOnHorizontalAxis(rect1, rect2) ||
               IsCollisionOnHorizontalAxis(rect2, rect1))
           {
-            if (rect1.y <= rect2.y)
+
+
+            if (rect1.y <= rect2.y) // The selected rod is colliding from above.
             {
               rods[selected].rect.y = rect2.y - ROD_HEIGHT;
             }
-            else
+            else // The selected rod is colliding from below.
             {
               rods[selected].rect.y = rect2.y + ROD_HEIGHT;
             }
           }
           else
           {
-            if (rect1.x <= rect2.x) {
+            if (rect1.x <= rect2.x) { // The selected rod is colliding from the left.
               rods[selected].rect.x = rect2.x - rect1.width;
             }
-            else
+            else // The selected rod is colliding from the right.
             {
               rods[selected].rect.x = rect2.x + rect2.width;
             }
           }
         }
 
-        if (no_collision_frame_count > 0)
+        // Decrement the counter that prevents the signal from being played, even in the case of a collision.
+        if (signalMustPlayFrameCount > 0) 
         {
-          no_collision_frame_count -= 1;
+          signalMustPlayFrameCount -= 1;
         }
+
+        // If a new collision has just occurred, 
         else if (collision_frame_count == 0 && newlyCollided && collided)
         {
+          // TODO: sig should be defined back when the rod is selected.
           Signal sig = signals[rods[selected].length - 1];
+
           collision_frame_count = 2;
           sig.offset = 255;
           set_signal(fd, -1, -1, sig);
@@ -655,10 +745,14 @@ int main(int argc, char **argv)
       else if (!collided && !originalSignal)
       {
         originalSignal = true;
+
+        // TODO: clean this up. There should be a helper function,
+        //  something like playSelectionSignal?
         set_signal(fd, -1, -1, signals[rods[selected].length - 1]);
       }
       set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
-    } // <-- Move logic
+    }
+    // <-- Movement logic
 
     // Save logic -->
     if (IsKeyPressed(KEY_S))
