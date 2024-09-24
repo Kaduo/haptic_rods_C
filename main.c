@@ -13,6 +13,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+//#define FULLSCREEN //TODO: remove
+
 const int NB_RODS_MENU = 10;
 const int UNIT_ROD_WIDTH = 40;
 const int ROD_HEIGHT = 40;
@@ -501,7 +503,7 @@ RodGroup *CreateRodGroupFromSpec(const char *spec_name)
   FILE *f;
   f = fopen(spec_name, "r");
   if (f == NULL) {
-    perror(NULL);
+    perror("Couldn't open the spec: ");
   }
   fscanf(f, "%d ", &nb_rods);
   RodGroup *rod_group = malloc(sizeof(RodGroup) + nb_rods * sizeof(Rod));
@@ -588,6 +590,7 @@ int main(int argc, char **argv)
   printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
   //InitWindow(300, 300, "HapticRods");
   #ifdef FULLSCREEN
+    printf("\n\n HIHIHIHI \n\n”");
     ToggleFullscreen();
   #endif
   SetTargetFPS(40);
