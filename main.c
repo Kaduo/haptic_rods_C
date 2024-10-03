@@ -22,7 +22,7 @@ const int SELECTION_COUNTDOWN = 3;
 const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
                         DARKGREEN, BLACK, BROWN, BLUE, ORANGE};
 
-const int TABLET_WIDTH = 1600;
+const int TABLET_WIDTH = 1000;
 const int TABLED_HEIGHT = 600;
 
 const double PARAMETER_NOT_SET = -10;
