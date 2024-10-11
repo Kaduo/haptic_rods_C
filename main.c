@@ -173,9 +173,9 @@ void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth)
 
 bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2)
 {
-  return ((rect2.x <= rect1.x) && (rect1.x <= rect2.x + rect2.width)) ||
-         ((rect2.x <= rect1.x + rect1.width) &&
-          (rect1.x + rect1.width <= rect2.x + rect2.width));
+  return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
+         ((rect2.x < rect1.x + rect1.width) &&
+          (rect1.x + rect1.width < rect2.x + rect2.width));
 }
 
 int ComputeSpeed(float deltaX, float deltaY, float *oldTime)
