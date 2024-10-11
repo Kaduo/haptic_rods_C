@@ -694,7 +694,7 @@ int main(int argc, char **argv)
             {
               rods[selected].rect.y = rect2.y - ROD_HEIGHT;
             }
-            else // The selected rod is colliding from below.
+            else if (rect1.y > rect2.y) // The selected rod is colliding from below.
             {
               rods[selected].rect.y = rect2.y + ROD_HEIGHT;
             }
@@ -704,7 +704,7 @@ int main(int argc, char **argv)
             if (rect1.x < rect2.x) { // The selected rod is colliding from the left.
               rods[selected].rect.x = rect2.x - rect1.width;
             }
-            else // The selected rod is colliding from the right.
+            else if (rect1.x  > rect2.x) // The selected rod is colliding from the right.
             {
               rods[selected].rect.x = rect2.x + rect2.width;
             }
