@@ -12,6 +12,8 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <ctype.h>
 
 //#define FULLSCREEN //TODO: remove
 
@@ -534,16 +536,34 @@ int main(int argc, char **argv)
   set_direction(fd, 0, 10); // The value was chosen arbitrarily.
 
 
+  // Parse command line arguments -->
+  const char *config_name = DEFAULT_CONFIG;
+  const char *spec_name = DEFAULT_SPEC;
+
+  int c;
+  while ((c = getopt(argc, argv, "c:s:")) != -1) {
+    switch (c) {
+      case 'c':
+        config_name = optarg;
+        break;
+      case 's':
+        spec_name = optarg;
+        break;
+      case '?':
+        if (optopt == 'c') {
+          fprintf(stderr, "L'option -%c nécessite un argument.\n", optopt);
+        } else if (isprint (optopt)) {
+          fprintf(stderr, "L'option -%c est inconnue.\n", optopt);
+        } else {
+          fprintf(stderr, "Caractère inconnu : '\\x%x'.\n", optopt);
+        }
+        return 1;
+      default:
+        abort();
+    }
+  } // <-- Parse command line arguments
+
   // Load config -->
-  const char *config_name;
-  if (argc > 1)
-  {
-    config_name = argv[1];
-  }
-  else
-  {
-    config_name = DEFAULT_CONFIG;
-  }
   bool config_error = false;
   config_t cfg = LoadConfig(&config_error, config_name);
   if (config_error)
@@ -553,16 +573,6 @@ int main(int argc, char **argv)
   // <-- Load config
 
   // Create rods -->
-  const char *spec_name;
-  if (argc > 2)
-  {
-    spec_name = argv[2];
-  }
-  else
-  {
-    spec_name = DEFAULT_SPEC;
-  }
-
   RodGroup *rod_group = CreateRodGroupFromSpec(spec_name);
   Rod *rods = rod_group->rods;
   int nb_rods = rod_group->nb_rods;
