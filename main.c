@@ -182,8 +182,10 @@ typedef struct SignalState  {
   int fd;
 } SignalState;
 
-SignalState InitSignalState() {
-  SignalState signalState = (SignalState){NO_SIGNAL, connect_to_tty()};
+SignalState InitSignalState(config_t cfg) {
+  Signal signals[NB_RODS_MENU];
+  InitSignals(cfg, signals);
+  SignalState signalState = (SignalState){NO_SIGNAL, connect_to_tty(), signals};
   if (signalState.fd != -1) {
       // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
     set_direction(signalState.fd, 0, 10);
@@ -255,9 +257,9 @@ typedef struct AppState
   SignalState signalState;
 } AppState;
 
-AppState InitAppState(RodGroup *rodGroup)
+AppState InitAppState(config_t cfg, const char *specName)
 {
-  return (AppState){InitTimeAndPlace(), rodGroup, InitSelectionState(), InitCollisionState(), InitSignalState()};
+  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg)};
 }
 
 void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
@@ -529,41 +531,6 @@ void DrawRodGroup(RodGroup rodGroup[])
     DrawRod(rodGroup->rods[i]);
   }
 }
-
-bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2)
-{
-  return ((rect2.x < rect1.x) && (rect1.x < rect2.x + rect2.width)) ||
-         ((rect2.x < rect1.x + rect1.width) &&
-          (rect1.x + rect1.width < rect2.x + rect2.width));
-}
-
-int ComputeSpeed(float deltaX, float deltaY, float *oldTime)
-{
-  float newTime = GetTime();
-  int speed;
-  float speedf;
-  if ((*oldTime != 0) && (newTime - *oldTime != 0))
-  {
-    speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
-             (newTime - *oldTime);
-    speed = floor(speedf);
-  }
-  else
-  {
-    speed = 1000;
-  }
-  *oldTime = newTime;
-  return abs(speed);
-}
-
-
-
-int ComputeAngle(float deltaX, float deltaY)
-{
-  return Vector2Angle((Vector2){.x = 1, .y = 0},
-                      (Vector2){.x = deltaX, .y = deltaY});
-}
-
 
 double ClampDouble(double d, double min, double max)
 {
@@ -917,36 +884,9 @@ int main(int argc, char **argv)
   }
   // <-- Load config
 
-  // Create rods -->
-  RodGroup *rod_group = NewRodGroup(spec_name);
-  Rod *rods = rod_group->rods;
-  int nbRods = rod_group->nbRods;
-  // <-- Create rods
-
-  Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals);
-
-  float time;
-  time = GetTime();
-
-  bool newlyCollided = true;
-  bool collided = false;
-  bool originalSignal = true;
-  int selected = -1;
-
-  int pointerOffsetX = 0; // Offset between pointer and selected rod
-  int pointerOffsetY = 0;
-
-  int collision_frame_count = 0;
-  int signalMustPlayFrameCount = 0;
-
-  AppState appState = InitAppState(rod_group);
+  AppState appState = InitAppState(cfg, spec_name);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
-
-  // int display = GetCurrentMonitor();
-  // printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
-  // InitWindow(300, 300, "HapticRods");
 
 #ifdef FULLSCREEN
   ToggleFullscreen();
@@ -961,184 +901,6 @@ int main(int argc, char **argv)
 
     UpdateAppState(&appState);
     DrawRodGroup(appState.rodGroup);
-
-    // Vector2 mousePosition = GetMousePosition();
-
-    // collided = false;
-
-    // // Selection logic -->
-    // if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    // {
-    //   /* Right after selecting a rod, there is a short period during
-    //   which its signal is guaranteed to play, even if there is a collision.*/
-    //   signalMustPlayFrameCount = 3;
-
-    //   // For each rod, check if it's under the mouse.
-    //   for (int i = 0; i < nbRods; i++)
-    //   {
-    //     // If a rod is under the mouse, mark it as selected.
-    //     if (CheckCollisionPointRec(mousePosition, rods[i].rect))
-    //     {
-    //       selected = i;
-
-    //       // Record the distance between the rod's origin and the mouse pointer.
-    //       // As long as the rod is selected, this distance will be kept constant
-    //       // on the axes along which the rod is free to move.
-    //       pointerOffsetX = rods[i].rect.x - mousePosition.x;
-    //       pointerOffsetY = rods[i].rect.y - mousePosition.y;
-
-    //       set_signal(fd, -1, -1, signals[rods[i].numericLength - 1]);
-    //       break;
-    //     }
-    //   }
-    // }
-
-    // if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-    // {
-    //   selected = -1;
-    //   clear_signal(fd);
-    //   collision_frame_count = 0;
-    // }
-    // // <-- Selection logic
-
-    // // Movement logic ->>
-
-    // if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0)
-    // {
-
-    //   // Record the pointer's displacement to compute its speed.
-    //   // Its speed is then used to compute the signal.
-    //   float dx = mousePosition.x + pointerOffsetX - rods[selected].rect.x;
-    //   float dy = mousePosition.y + pointerOffsetY - rods[selected].rect.y;
-
-    //   // Record the current position of the selected rectangle,
-    //   // so that it may be used to undo the move in case of an accidental merging.
-    //   float oldX = rods[selected].rect.x;
-    //   float oldY = rods[selected].rect.y;
-
-    //   // TODO: cleanup: rename rect1 (selectedRect ?), and test if we can use it everywhere
-    //   // instead of the verbose rods[selected].rect.
-    //   // Furthermore, see if we can do the same with the rod itself,
-    //   // something like selectedRod = rods[selected].
-    //   Rectangle rect1 = rods[selected].rect;
-
-    //   // Move the selected rod so that it sticks to the pointer.
-    //   rods[selected].rect.x = mousePosition.x + pointerOffsetX;
-    //   rods[selected].rect.y = mousePosition.y + pointerOffsetY;
-
-    //   // For each rod, check if it is colliding with the selected rod.
-    //   int i;
-    //   for (i = 0; i < nbRods; i++)
-    //   {
-
-    //     Rectangle rect2 = rods[i].rect;
-
-    //     if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
-    //         i != selected)
-    //     {
-
-    //       collided = true;
-
-    //       if (IsCollisionOnHorizontalAxis(rect1, rect2) ||
-    //           IsCollisionOnHorizontalAxis(rect2, rect1))
-    //       {
-
-    //         if (rect1.y < rect2.y) // The selected rod is colliding from above.
-    //         {
-    //           rods[selected].rect.y = rect2.y - ROD_HEIGHT;
-    //         }
-    //         else if (rect1.y > rect2.y) // The selected rod is colliding from below.
-    //         {
-    //           rods[selected].rect.y = rect2.y + ROD_HEIGHT;
-    //         }
-    //       }
-    //       else
-    //       {
-    //         if (rect1.x < rect2.x) { // The selected rod is colliding from the left.
-    //           rods[selected].rect.x = rect2.x - rect1.width;
-    //         }
-    //         else if (rect1.x  > rect2.x) // The selected rod is colliding from the right.
-    //         {
-    //           rods[selected].rect.x = rect2.x + rect2.width;
-    //         }
-    //       }
-    //     }
-
-    //     // Decrement the counter that prevents the signal from being played, even in the case of a collision.
-    //     if (signalMustPlayFrameCount > 0)
-    //     {
-    //       signalMustPlayFrameCount -= 1;
-    //     }
-
-    //     // If a new collision has just occurred,
-    //     else if (collision_frame_count == 0 && newlyCollided && collided)
-    //     {
-    //       // TODO: sig should be defined back when the rod is selected.
-    //       Signal sig = signals[rods[selected].numericLength - 1];
-
-    //       collision_frame_count = 2;
-    //       sig.offset = 255;
-    //       set_signal(fd, -1, -1, sig);
-    //     }
-    //   }
-
-    //   if (collided)
-    //   {
-    //     // Check that we didn't merge two rods by accident.
-    //     for (i = 0; i < nbRods; i++)
-    //     {
-
-    //       if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
-    //           i != selected)
-    //       {
-    //         rods[selected].rect.x = oldX;
-    //         rods[selected].rect.y = oldY;
-    //         break;
-    //       }
-    //     }
-    //   }
-
-    //   newlyCollided = !collided;
-
-    //   if (collision_frame_count > 0)
-    //   {
-    //     collision_frame_count -= 1;
-    //     if (collision_frame_count == 0)
-    //     {
-    //       originalSignal = false;
-    //       clear_signal(fd);
-    //     }
-    //   }
-    //   else if (!collided && !originalSignal)
-    //   {
-    //     originalSignal = true;
-
-    //     // TODO: clean this up. There should be a helper function,
-    //     //  something like playSelectionSignal?
-    //     set_signal(fd, -1, -1, signals[rods[selected].numericLength - 1]);
-    //   }
-    //   set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
-    // }
-    // // <-- Movement logic
-
-    // // Save logic -->
-    // if (IsKeyPressed(KEY_S))
-    // {
-    //   FILE *f;
-    //   f = fopen("latest.rods", "w");
-    //   if (f == NULL)
-    //   {
-    //     // Error, as expected.
-    //     perror("Error opening file");
-    //     exit(-1);
-    //   }
-    //   SaveRods(rods, nbRods, f);
-    //   fclose(f);
-    // }
-    // // <-- Save logic
-
-    // // Draw rods
-    // DrawRodGroup(rod_group);
     DrawFPS(0, 0);
 
     EndDrawing();
