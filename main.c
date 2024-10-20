@@ -423,6 +423,8 @@ void UpdateAppState(AppState *s)
   {
     UpdateSelectedRodPosition(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace.mousePosition);
   }
+
+  UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
   UpdateSelectionTimer(&s->selectionState);
 }
 
