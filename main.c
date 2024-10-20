@@ -72,8 +72,13 @@ void SelectRod(SelectionState *s, Rod *rod, Vector2 mousePosition) {
 
 void UnselectRod(SelectionState *s) {
   s->selected = false;
+  s->selectedRod = NULL;
   s->selectionCountdown = 0;
 }
+
+typedef struct AppState {
+
+} Appstate;
 
 typedef struct CollisionState {
   
@@ -122,13 +127,16 @@ Rod CreateRod(int l, float x, float y) {
   return rod;
 }
 
-void DrawRods(Rod rods[], int nbRods)
+void DrawRod(Rod rod) {
+    DrawRectangleRec(rod.rect, rod.color);
+    DrawRectangleLinesEx(rod.rect, 1., BLACK);
+}
+
+void DrawRodGroup(RodGroup rodGroup[])
 {
-  int i;
-  for (i = 0; i < nbRods; i++)
+  for (int i = 0; i < rodGroup->nb_rods; i++)
   {
-    DrawRectangleRec(rods[i].rect, rods[i].color);
-    DrawRectangleLinesEx(rods[i].rect, 1., BLACK);
+    DrawRod(rodGroup->rods[i]);
   }
 }
 
@@ -759,7 +767,7 @@ int main(int argc, char **argv)
     // <-- Save logic
 
     // Draw rods
-    DrawRods(rods, nb_rods);
+    DrawRodGroup(rod_group);
     DrawFPS(0, 0);
 
     EndDrawing();
