@@ -36,69 +36,81 @@ typedef struct Rod
   int numericLength;
 } Rod;
 
-Rod NewRod(int numericLength, float x, float y) {
-  return (Rod){rect: (Rectangle){x, y, numericLength*UNIT_ROD_LENGTH, ROD_HEIGHT}, numericLength};
+Rod NewRod(int numericLength, float x, float y)
+{
+  return (Rod){rect : (Rectangle){x, y, numericLength * UNIT_ROD_LENGTH, ROD_HEIGHT}, numericLength};
 }
 
-Vector2 GetTopLeft(Rod rod) {
+Vector2 GetTopLeft(Rod rod)
+{
   return (Vector2){rod.rect.x, rod.rect.y};
 }
 
-Vector2 GetBottomRight(Rod rod) {
+Vector2 GetBottomRight(Rod rod)
+{
   return (Vector2){rod.rect.x + rod.rect.width, rod.rect.y + rod.rect.height};
 }
 
-Vector2 GetBottomLeft(Rod rod) {
+Vector2 GetBottomLeft(Rod rod)
+{
   return (Vector2){rod.rect.x, rod.rect.y + rod.rect.height};
 }
 
-Vector2 GetTopRight(Rod rod) {
+Vector2 GetTopRight(Rod rod)
+{
   return (Vector2){rod.rect.x + rod.rect.width, rod.rect.y};
 }
 
-float GetTop(Rod rod) {
+float GetTop(Rod rod)
+{
   return rod.rect.y;
 }
 
-void SetTop(Rod *rod, float top) {
+void SetTop(Rod *rod, float top)
+{
   rod->rect.y = top;
 }
 
-float GetBottom(Rod rod) {
+float GetBottom(Rod rod)
+{
   return rod.rect.y + rod.rect.height;
 }
 
-void SetBottom(Rod *rod, float bottom) {
-  rod->rect.y = bottom - rod->rect.height; 
+void SetBottom(Rod *rod, float bottom)
+{
+  rod->rect.y = bottom - rod->rect.height;
 }
 
-
-float GetLeft(Rod rod) {
+float GetLeft(Rod rod)
+{
   return rod.rect.x;
 }
 
-void SetLeft(Rod *rod, float left) {
-  rod->rect.x = left; 
+void SetLeft(Rod *rod, float left)
+{
+  rod->rect.x = left;
 }
 
-
-float GetRight(Rod rod) {
+float GetRight(Rod rod)
+{
   return rod.rect.x + rod.rect.width;
 }
 
-void SetRight(Rod *rod, float right) {
-  rod->rect.x = right - rod->rect.width; 
+void SetRight(Rod *rod, float right)
+{
+  rod->rect.x = right - rod->rect.width;
 }
 
-void SetTopLeft(Rod *rod, Vector2 newPos) {
+void SetTopLeft(Rod *rod, Vector2 newPos)
+{
   rod->rect.x = newPos.x;
   rod->rect.y = newPos.y;
 }
 
-Color GetRodColor(Rod rod) {
+Color GetRodColor(Rod rod)
+{
   return COLORS[rod.numericLength - 1];
 }
-
 
 typedef struct RodGroup
 {
@@ -106,197 +118,269 @@ typedef struct RodGroup
   Rod rods[];
 } RodGroup;
 
-typedef struct SelectionState {
+typedef struct SelectionState
+{
   Rod *selectedRod;
   int selectionTimer;
   Vector2 offset;
 } SelectionState;
 
-
-SelectionState InitSelectionState() {
+SelectionState InitSelectionState()
+{
   SelectionState s;
   s.selectedRod = NULL;
   s.selectionTimer = 0;
   s.offset = (Vector2){0, 0};
-  return  s;
+  return s;
 }
 
-typedef struct AppState {
+typedef struct AppState
+{
   RodGroup *rodGroup;
   SelectionState selectionState;
 } AppState;
 
-AppState InitAppState(RodGroup *rodGroup) {
+AppState InitAppState(RodGroup *rodGroup)
+{
   return (AppState){rodGroup, InitSelectionState()};
 }
 
-void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition) {
+void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
+{
   for (int i = 0; i < rodGroup->nbRods; i++)
+  {
+    Rod *rod = &(rodGroup->rods[i]);
+    // If a rod is under the mouse, mark it as selected.
+    if (CheckCollisionPointRec(mousePosition, rod->rect))
     {
-      Rod *rod = &(rodGroup->rods[i]);
-      // If a rod is under the mouse, mark it as selected.
-      if (CheckCollisionPointRec(mousePosition, rod->rect))
-      {
-        s->selectedRod = rod;
-        s->selectionTimer = 0;
-        s->offset = Vector2Subtract(GetTopLeft(*rod), mousePosition);
-        break;
-      }
+      s->selectedRod = rod;
+      s->selectionTimer = 0;
+      s->offset = Vector2Subtract(GetTopLeft(*rod), mousePosition);
+      break;
     }
+  }
 }
 
-void ClearSelection(SelectionState *s) {
+void ClearSelection(SelectionState *s)
+{
   s->selectedRod = NULL;
   s->selectionTimer = 0;
 }
 
-void UpdateSelectionTimer(SelectionState *s) {
-  if (s->selectedRod != NULL) {
+void UpdateSelectionTimer(SelectionState *s)
+{
+  if (s->selectedRod != NULL)
+  {
     s->selectionTimer += 1;
   }
 }
 
-Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition) {
-  if (s.selectedRod == NULL) {
+Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
+{
+  if (s.selectedRod == NULL)
+  {
     fprintf(stderr, "A rod must be selected to speculate about its movement!\n");
     abort();
-  } else {
+  }
+  else
+  {
     Vector2 newTopLeft = Vector2Add(mousePosition, s.offset);
     return NewRod(s.selectedRod->numericLength, newTopLeft.x, newTopLeft.y);
   }
 }
 
-enum StrictCollisionType {NO_STRICT_COLLISION, FROM_LEFT, FROM_RIGHT, FROM_ABOVE, FROM_BELOW};
+enum StrictCollisionType
+{
+  NO_STRICT_COLLISION,
+  FROM_LEFT,
+  FROM_RIGHT,
+  FROM_ABOVE,
+  FROM_BELOW
+};
 
-enum RelativeYPosition {STRICTLY_ABOVE = 0x01, STRICTLY_BELOW= 0x02, JUST_ABOVE= 0x04, JUST_BELOW= 0x08, Y_ALIGNED= 0x10};
+enum RelativeYPosition
+{
+  STRICTLY_ABOVE = 0x01,
+  STRICTLY_BELOW = 0x02,
+  JUST_ABOVE = 0x04,
+  JUST_BELOW = 0x08,
+  Y_ALIGNED = 0x10
+};
 
-enum RelativeXPosition {STRICTLY_LEFT= 0x01, STRICTLY_RIGHT= 0x02, JUST_LEFT= 0x04, JUST_RIGHT= 0x08, X_ALIGNED= 0x10};
+enum RelativeXPosition
+{
+  STRICTLY_LEFT = 0x01,
+  STRICTLY_RIGHT = 0x02,
+  JUST_LEFT = 0x04,
+  JUST_RIGHT = 0x08,
+  X_ALIGNED = 0x10
+};
 
-enum RelativeYPosition RelativeYPosition(Rod rod1, Rod rod2) {
-  if (GetBottom(rod1) < GetTop(rod2)) {
+enum RelativeYPosition RelativeYPosition(Rod rod1, Rod rod2)
+{
+  if (GetBottom(rod1) < GetTop(rod2))
+  {
     return STRICTLY_ABOVE;
-  } else if (GetBottom(rod1) == GetTop(rod2)) {
+  }
+  else if (GetBottom(rod1) == GetTop(rod2))
+  {
     return JUST_ABOVE;
   }
-  else if (GetTop(rod1) > GetBottom(rod2)) {
+  else if (GetTop(rod1) > GetBottom(rod2))
+  {
     return STRICTLY_BELOW;
-  } else if (GetTop(rod1) == GetBottom(rod2)) {
+  }
+  else if (GetTop(rod1) == GetBottom(rod2))
+  {
     return JUST_BELOW;
-  } else {
+  }
+  else
+  {
     return Y_ALIGNED;
   }
 }
 
-enum RelativeXPosition RelativeXPosition(Rod rod1, Rod rod2) {
-  if (GetRight(rod1) < GetLeft(rod2)) {
+enum RelativeXPosition RelativeXPosition(Rod rod1, Rod rod2)
+{
+  if (GetRight(rod1) < GetLeft(rod2))
+  {
     return STRICTLY_LEFT;
-  } else if (GetRight(rod1) == GetLeft(rod2)) {
+  }
+  else if (GetRight(rod1) == GetLeft(rod2))
+  {
     return JUST_LEFT;
-  } else if (GetLeft(rod1) > GetRight(rod2)) {
+  }
+  else if (GetLeft(rod1) > GetRight(rod2))
+  {
     return STRICTLY_RIGHT;
-  } else if (GetLeft(rod1) == GetRight(rod2)) {
+  }
+  else if (GetLeft(rod1) == GetRight(rod2))
+  {
     return JUST_RIGHT;
-  } else {
+  }
+  else
+  {
     return X_ALIGNED;
   }
 }
 
-bool StrictlyCollide(Rod rod1, Rod rod2) {
+bool StrictlyCollide(Rod rod1, Rod rod2)
+{
   return (RelativeXPosition(rod1, rod2) == X_ALIGNED) && (RelativeYPosition(rod1, rod2) == Y_ALIGNED);
 }
 
-bool SoftlyCollide(Rod rod1 ,Rod rod2) {
-  return (RelativeXPosition(rod1,rod2) & (X_ALIGNED | JUST_RIGHT | JUST_LEFT))
-          && (RelativeYPosition(rod1,rod2) & (Y_ALIGNED | JUST_ABOVE | JUST_BELOW));
+bool SoftlyCollide(Rod rod1, Rod rod2)
+{
+  return (RelativeXPosition(rod1, rod2) & (X_ALIGNED | JUST_RIGHT | JUST_LEFT)) && (RelativeYPosition(rod1, rod2) & (Y_ALIGNED | JUST_ABOVE | JUST_BELOW));
 }
 
-enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod) {
-  if (!StrictlyCollide(rod_after, other_rod)) {
+enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod)
+{
+  if (!StrictlyCollide(rod_after, other_rod))
+  {
     return NO_STRICT_COLLISION;
   }
 
-  switch (RelativeYPosition(rod_before, other_rod)) {
-    case JUST_ABOVE:
-    case STRICTLY_ABOVE:
-      return FROM_ABOVE;
-    case JUST_BELOW:
-    case STRICTLY_BELOW:
-      return FROM_BELOW;
-    default:
-      break;
+  switch (RelativeYPosition(rod_before, other_rod))
+  {
+  case JUST_ABOVE:
+  case STRICTLY_ABOVE:
+    return FROM_ABOVE;
+  case JUST_BELOW:
+  case STRICTLY_BELOW:
+    return FROM_BELOW;
+  default:
+    break;
   }
 
-  switch (RelativeXPosition(rod_before, other_rod)) {
-    case JUST_LEFT:
-    case STRICTLY_LEFT:
-      return FROM_LEFT;
-    case JUST_RIGHT:
-    case STRICTLY_RIGHT:
-      return FROM_RIGHT;
-    default:
-      fprintf(stderr, "THIS HSHOLDN4T AHPPEN!\n");
-      return NO_STRICT_COLLISION;
+  switch (RelativeXPosition(rod_before, other_rod))
+  {
+  case JUST_LEFT:
+  case STRICTLY_LEFT:
+    return FROM_LEFT;
+  case JUST_RIGHT:
+  case STRICTLY_RIGHT:
+    return FROM_RIGHT;
+  default:
+    fprintf(stderr, "THIS HSHOLDN4T AHPPEN!\n");
+    return NO_STRICT_COLLISION;
   }
 }
 
-void UpdateSelectedRodPosition(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition) {
-  if (s->selectedRod == NULL) {
+void UpdateSelectedRodPosition(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
+{
+  if (s->selectedRod == NULL)
+  {
     return;
   }
   Rod newRod = RodAfterSpeculativeMove(*s, mousePosition);
 
-  for (int i = 0; i<rodGroup->nbRods; i++) {
+  for (int i = 0; i < rodGroup->nbRods; i++)
+  {
     Rod *otherRod = &rodGroup->rods[i];
-    if (s->selectedRod != otherRod) {
-      switch (CheckStrictCollision(*(s->selectedRod), newRod, rodGroup->rods[i])) {
-        case NO_STRICT_COLLISION:
-          break;
-        case FROM_ABOVE:
-          SetBottom(&newRod, GetTop(*otherRod));
-          break;
-        case FROM_BELOW:
-          SetTop(&newRod, GetBottom(*otherRod));
-          break;
-        case FROM_RIGHT:
-          SetLeft(&newRod, GetRight(*otherRod));
-          break;
-        case FROM_LEFT:
-          SetRight(&newRod, GetLeft(*otherRod));
-          break;
+    if (s->selectedRod != otherRod)
+    {
+      switch (CheckStrictCollision(*(s->selectedRod), newRod, rodGroup->rods[i]))
+      {
+      case NO_STRICT_COLLISION:
+        break;
+      case FROM_ABOVE:
+        SetBottom(&newRod, GetTop(*otherRod));
+        break;
+      case FROM_BELOW:
+        SetTop(&newRod, GetBottom(*otherRod));
+        break;
+      case FROM_RIGHT:
+        SetLeft(&newRod, GetRight(*otherRod));
+        break;
+      case FROM_LEFT:
+        SetRight(&newRod, GetLeft(*otherRod));
+        break;
       }
     }
   }
 
   // Another loop to insure against accidental merges.
-  for (int i = 0; i<rodGroup->nbRods; i++) {
+  for (int i = 0; i < rodGroup->nbRods; i++)
+  {
     Rod *otherRod = &rodGroup->rods[i];
-    if (s->selectedRod != otherRod && StrictlyCollide(newRod, *otherRod)) {
+    if (s->selectedRod != otherRod && StrictlyCollide(newRod, *otherRod))
+    {
       return;
     }
   }
   s->selectedRod->rect = newRod.rect;
-
 }
 
-void UpdateAppState(AppState *s) {
+void UpdateAppState(AppState *s)
+{
+
   Vector2 mousePosition = GetMousePosition();
-  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+  {
     SelectRodUnderMouse(&s->selectionState, s->rodGroup, mousePosition);
-  } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+  }
+  else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+  {
     ClearSelection(&s->selectionState);
-  } else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+  }
+  else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+  {
     UpdateSelectedRodPosition(&s->selectionState, s->rodGroup, mousePosition);
   }
   UpdateSelectionTimer(&s->selectionState);
 }
 
-typedef struct CollisionState {
-  
+typedef struct CollisionState
+{
+
 } CollisionState;
 
-void DrawRod(Rod rod) {
-    DrawRectangleRec(rod.rect, GetRodColor(rod));
-    DrawRectangleLinesEx(rod.rect, 1., BLACK);
+void DrawRod(Rod rod)
+{
+  DrawRectangleRec(rod.rect, GetRodColor(rod));
+  DrawRectangleLinesEx(rod.rect, 1., BLACK);
 }
 
 void DrawRodGroup(RodGroup rodGroup[])
@@ -613,14 +697,14 @@ void SaveRods(Rod rods[], int nbRods, FILE *file)
   }
 }
 
-
 RodGroup *NewRodGroup(const char *spec_name)
 {
   int i;
   int nbRods;
   FILE *f;
   f = fopen(spec_name, "r");
-  if (f == NULL) {
+  if (f == NULL)
+  {
     perror("Couldn't open the spec: ");
   }
   fscanf(f, "%d ", &nbRods);
@@ -648,31 +732,37 @@ int main(int argc, char **argv)
   // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
   set_direction(fd, 0, 10);
 
-
   // Parse command line arguments -->
   const char *config_name = DEFAULT_CONFIG;
   const char *spec_name = DEFAULT_SPEC;
 
   int c;
-  while ((c = getopt(argc, argv, "c:s:")) != -1) {
-    switch (c) {
-      case 'c':
-        config_name = optarg;
-        break;
-      case 's':
-        spec_name = optarg;
-        break;
-      case '?':
-        if (optopt == 'c') {
-          fprintf(stderr, "L'option -%c nécessite un argument.\n", optopt);
-        } else if (isprint (optopt)) {
-          fprintf(stderr, "L'option -%c est inconnue.\n", optopt);
-        } else {
-          fprintf(stderr, "Caractère inconnu : '\\x%x'.\n", optopt);
-        }
-        return 1;
-      default:
-        abort();
+  while ((c = getopt(argc, argv, "c:s:")) != -1)
+  {
+    switch (c)
+    {
+    case 'c':
+      config_name = optarg;
+      break;
+    case 's':
+      spec_name = optarg;
+      break;
+    case '?':
+      if (optopt == 'c')
+      {
+        fprintf(stderr, "L'option -%c nécessite un argument.\n", optopt);
+      }
+      else if (isprint(optopt))
+      {
+        fprintf(stderr, "L'option -%c est inconnue.\n", optopt);
+      }
+      else
+      {
+        fprintf(stderr, "Caractère inconnu : '\\x%x'.\n", optopt);
+      }
+      return 1;
+    default:
+      abort();
     }
   } // <-- Parse command line arguments
 
@@ -691,10 +781,8 @@ int main(int argc, char **argv)
   int nbRods = rod_group->nbRods;
   // <-- Create rods
 
-
   Signal signals[NB_RODS_MENU];
   InitSignals(cfg, signals);
-
 
   float time;
   time = GetTime();
@@ -703,8 +791,8 @@ int main(int argc, char **argv)
   bool collided = false;
   bool originalSignal = true;
   int selected = -1;
-  
-  int pointerOffsetX = 0; // Offset between pointer and selected rod 
+
+  int pointerOffsetX = 0; // Offset between pointer and selected rod
   int pointerOffsetY = 0;
 
   int collision_frame_count = 0;
@@ -713,15 +801,14 @@ int main(int argc, char **argv)
   AppState appState = InitAppState(rod_group);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
-  
-  
-  //int display = GetCurrentMonitor();
-  //printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
-  //InitWindow(300, 300, "HapticRods");
-  
-  #ifdef FULLSCREEN
-    ToggleFullscreen();
-  #endif
+
+  // int display = GetCurrentMonitor();
+  // printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
+  // InitWindow(300, 300, "HapticRods");
+
+#ifdef FULLSCREEN
+  ToggleFullscreen();
+#endif
   SetTargetFPS(40);
 
   // Main loop
@@ -732,7 +819,6 @@ int main(int argc, char **argv)
 
     UpdateAppState(&appState);
     DrawRodGroup(appState.rodGroup);
-
 
     // Vector2 mousePosition = GetMousePosition();
 
@@ -790,7 +876,7 @@ int main(int argc, char **argv)
 
     //   // TODO: cleanup: rename rect1 (selectedRect ?), and test if we can use it everywhere
     //   // instead of the verbose rods[selected].rect.
-    //   // Furthermore, see if we can do the same with the rod itself, 
+    //   // Furthermore, see if we can do the same with the rod itself,
     //   // something like selectedRod = rods[selected].
     //   Rectangle rect1 = rods[selected].rect;
 
@@ -815,7 +901,6 @@ int main(int argc, char **argv)
     //           IsCollisionOnHorizontalAxis(rect2, rect1))
     //       {
 
-
     //         if (rect1.y < rect2.y) // The selected rod is colliding from above.
     //         {
     //           rods[selected].rect.y = rect2.y - ROD_HEIGHT;
@@ -838,12 +923,12 @@ int main(int argc, char **argv)
     //     }
 
     //     // Decrement the counter that prevents the signal from being played, even in the case of a collision.
-    //     if (signalMustPlayFrameCount > 0) 
+    //     if (signalMustPlayFrameCount > 0)
     //     {
     //       signalMustPlayFrameCount -= 1;
     //     }
 
-    //     // If a new collision has just occurred, 
+    //     // If a new collision has just occurred,
     //     else if (collision_frame_count == 0 && newlyCollided && collided)
     //     {
     //       // TODO: sig should be defined back when the rod is selected.
