@@ -2,8 +2,9 @@
 #include "raymath.h"
 #define TERMINAL "/dev/ttyUSB0"
 
+#include "config.h"
 #include "signals.h"
-#include "tinyexpr.h"
+#include "rods.h"
 #include <fcntl.h>
 #include <libconfig.h>
 #include <stddef.h>
@@ -16,15 +17,9 @@
 #include <ctype.h>
 
 #define NB_RODS_MENU 10
-const int UNIT_ROD_LENGTH = 40;
-const int ROD_HEIGHT = 40;
-const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
-                        DARKGREEN, BLACK, BROWN, BLUE, ORANGE};
 
 const int TABLET_LENGTH = 1000;
 const int TABLED_HEIGHT = 600;
-
-const double PARAMETER_NOT_SET = -10;
 
 static const char DEFAULT_CONFIG[] = "config.cfg";
 static const char DEFAULT_SPEC[] = "spec.rods";
@@ -54,93 +49,6 @@ int ComputeAngleV(Vector2 deltaPos) {
 }
 
 
-typedef struct Rod
-{
-  Rectangle rect;
-  int numericLength;
-} Rod;
-
-Rod NewRod(int numericLength, float x, float y)
-{
-  return (Rod){rect : (Rectangle){x, y, numericLength * UNIT_ROD_LENGTH, ROD_HEIGHT}, numericLength};
-}
-
-Vector2 GetTopLeft(Rod rod)
-{
-  return (Vector2){rod.rect.x, rod.rect.y};
-}
-
-Vector2 GetBottomRight(Rod rod)
-{
-  return (Vector2){rod.rect.x + rod.rect.width, rod.rect.y + rod.rect.height};
-}
-
-Vector2 GetBottomLeft(Rod rod)
-{
-  return (Vector2){rod.rect.x, rod.rect.y + rod.rect.height};
-}
-
-Vector2 GetTopRight(Rod rod)
-{
-  return (Vector2){rod.rect.x + rod.rect.width, rod.rect.y};
-}
-
-float GetTop(Rod rod)
-{
-  return rod.rect.y;
-}
-
-void SetTop(Rod *rod, float top)
-{
-  rod->rect.y = top;
-}
-
-float GetBottom(Rod rod)
-{
-  return rod.rect.y + rod.rect.height;
-}
-
-void SetBottom(Rod *rod, float bottom)
-{
-  rod->rect.y = bottom - rod->rect.height;
-}
-
-float GetLeft(Rod rod)
-{
-  return rod.rect.x;
-}
-
-void SetLeft(Rod *rod, float left)
-{
-  rod->rect.x = left;
-}
-
-float GetRight(Rod rod)
-{
-  return rod.rect.x + rod.rect.width;
-}
-
-void SetRight(Rod *rod, float right)
-{
-  rod->rect.x = right - rod->rect.width;
-}
-
-void SetTopLeft(Rod *rod, Vector2 newPos)
-{
-  rod->rect.x = newPos.x;
-  rod->rect.y = newPos.y;
-}
-
-Color GetRodColor(Rod rod)
-{
-  return COLORS[rod.numericLength - 1];
-}
-
-typedef struct RodGroup
-{
-  int nbRods;
-  Rod rods[];
-} RodGroup;
 
 typedef struct SelectionState
 {
@@ -178,14 +86,14 @@ enum SignalPlaying{NO_SIGNAL, IMPULSE, SELECTED_ROD_SIGNAL};
 
 typedef struct SignalState  {
   enum SignalPlaying signalPlaying;
-  Signal signals[NB_RODS_MENU];
+  Signal *signals;
   int fd;
 } SignalState;
 
 SignalState InitSignalState(config_t cfg) {
   Signal signals[NB_RODS_MENU];
   InitSignals(cfg, signals);
-  SignalState signalState = (SignalState){NO_SIGNAL, connect_to_tty(), signals};
+  SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
   if (signalState.fd != -1) {
       // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
     set_direction(signalState.fd, 0, 10);
@@ -532,329 +440,18 @@ void DrawRodGroup(RodGroup rodGroup[])
   }
 }
 
-double ClampDouble(double d, double min, double max)
-{
-  const double t = d < min ? min : d;
-  return t > max ? max : t;
-}
 
-config_t LoadConfig(bool *err, const char *config_name)
-{
-  config_t cfg;
-  config_init(&cfg);
-  if (!config_read_file(&cfg, config_name))
-  {
-    fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
-            config_error_line(&cfg), config_error_text(&cfg));
-    config_destroy(&cfg);
-    *err = true;
-  }
-  else
-  {
-    *err = false;
-  }
-  return cfg;
-}
-
-te_expr *GetConfigExpr(config_t *cfg, char *expr_name, te_variable *vars)
-{
-  const char *string_expr;
-  int err = 0;
-  if (config_lookup_string(cfg, expr_name, &string_expr))
-  {
-    return te_compile(string_expr, vars, 1, &err);
-  }
-  return 0;
-}
-
-double ReadParameterFromSetting(config_setting_t *setting, char *exprName)
-{
-  const char *string_expr;
-  int err = 0;
-  if (config_setting_lookup_string(setting, exprName, &string_expr))
-  {
-    return te_interp(string_expr, &err);
-  }
-  else
-  {
-    return PARAMETER_NOT_SET;
-  }
-}
-
-void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l,
-                                char *exprName, double mask)
-{
-  double my_l = l;
-  te_variable vars[] = {{"l", &my_l}};
-  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
-  if ((void *)expr != 0)
-  {
-    *parameter = (uint16_t)ClampDouble(te_eval(expr), 0, mask);
-  }
-}
-
-void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
-                               char *exprName, double mask)
-{
-  double my_l = l;
-  te_variable vars[] = {{"l", &my_l}};
-  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
-  if ((void *)expr != 0)
-  {
-    *parameter = (uint8_t)ClampDouble(te_eval(expr), 0, mask);
-  }
-}
-
-void SetSignalKind(config_t *cfg, SignalType *signalKind)
-{
-  const char *signalName;
-  if (config_lookup_string(cfg, "signal_type", &signalName))
-  {
-    if (strcmp(signalName, "sine") == 0)
-    {
-      *signalKind = SINE;
-    }
-    else if (strcmp(signalName, "steady") == 0)
-    {
-      *signalKind = STEADY;
-    }
-    else if (strcmp(signalName, "triangle") == 0)
-    {
-      *signalKind = TRIANGLE;
-    }
-    else if (strcmp(signalName, "front teeth") == 0)
-    {
-      *signalKind = FRONT_TEETH;
-    }
-    else if (strcmp(signalName, "back teeth") == 0)
-    {
-      *signalKind = BACK_TEETH;
-    }
-  }
-}
-
-void InitSignals(config_t cfg, Signal signals[])
-{
-
-  char *signal_parameter_name = "signal_type";
-  SignalType signal = SINE;
-  SetSignalKind(&cfg, &signal);
-
-  int i;
-  for (i = 0; i < 10; i++)
-  {
-    signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
-    SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
-        "period_expr", 0xFFFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_expr", 0xFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
-        "duty_expr", 0xFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, offset)), i,
-        "offset_expr", 0xFF);
-  }
-
-  int per_rod = 0;
-  config_lookup_bool(&cfg, "per_rod", &per_rod);
-
-  if (per_rod)
-  {
-    char *rod_names[] = {"r1", "r2", "r3", "r4", "r5",
-                         "r6", "r7", "r8", "r9", "r10"};
-    int i;
-    for (i = 0; i < 10; i++)
-    {
-      config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
-
-      if (setting != NULL)
-      {
-
-        double period = ReadParameterFromSetting(setting, "period");
-        if (period != PARAMETER_NOT_SET)
-        {
-          signals[i].period = ClampDouble(period, 0, 0xFFFF);
-        }
-
-        double amplitude = ReadParameterFromSetting(setting, "amplitude");
-        if (amplitude != PARAMETER_NOT_SET)
-        {
-          signals[i].amplitude = ClampDouble(amplitude, 0, 0xFF);
-        }
-
-        double offset = ReadParameterFromSetting(setting, "offset");
-        if (offset != PARAMETER_NOT_SET)
-        {
-          signals[i].offset = ClampDouble(offset, 0, 0xFF);
-        }
-
-        double duty = ReadParameterFromSetting(setting, "duty");
-        if (duty != PARAMETER_NOT_SET)
-        {
-          signals[i].duty = ClampDouble(duty, 0, 0xFF);
-        }
-        const char *signal_name;
-        int signal = SINE;
-        if (config_setting_lookup_string(setting, signal_parameter_name,
-                                         &signal_name))
-        {
-          if (strcmp(signal_name, "sine") == 0)
-          {
-            signal = SINE;
-          }
-          else if (strcmp(signal_name, "steady") == 0)
-          {
-            signal = STEADY;
-          }
-          else if (strcmp(signal_name, "triangle") == 0)
-          {
-            signal = TRIANGLE;
-          }
-          else if (strcmp(signal_name, "front teeth") == 0)
-          {
-            signal = FRONT_TEETH;
-          }
-          else if (strcmp(signal_name, "back teeth") == 0)
-          {
-            signal = BACK_TEETH;
-          }
-          signals[i].signal_type = signal;
-        }
-      }
-    }
-  }
-
-  int per_group = 0;
-  config_lookup_bool(&cfg, "per_group", &per_group);
-  if (per_group)
-  {
-    char *groups[] = {"g1-7", "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
-                      "g3-6-9", "g1-7", "g2-4-8", "g3-6-9", "g5-10"};
-    int i;
-    for (i = 0; i < 10; i++)
-    {
-      config_setting_t *setting = config_lookup(&cfg, groups[i]);
-
-      if (setting != NULL)
-      {
-
-        double period = ReadParameterFromSetting(setting, "period");
-        if (period != PARAMETER_NOT_SET)
-        {
-          signals[i].period = ClampDouble(period, 0, 0xFFFF);
-        }
-
-        double amplitude = ReadParameterFromSetting(setting, "amplitude");
-        if (amplitude != PARAMETER_NOT_SET)
-        {
-          signals[i].amplitude = ClampDouble(amplitude, 0, 0xFF);
-        }
-
-        double offset = ReadParameterFromSetting(setting, "offset");
-        if (offset != PARAMETER_NOT_SET)
-        {
-          signals[i].offset = ClampDouble(offset, 0, 0xFF);
-        }
-
-        double duty = ReadParameterFromSetting(setting, "duty");
-        if (duty != PARAMETER_NOT_SET)
-        {
-          signals[i].duty = ClampDouble(duty, 0, 0xFF);
-        }
-        const char *signal_name;
-        int signal = SINE;
-        if (config_setting_lookup_string(setting, signal_parameter_name,
-                                         &signal_name))
-        {
-          if (strcmp(signal_name, "sine") == 0)
-          {
-            signal = SINE;
-          }
-          else if (strcmp(signal_name, "steady") == 0)
-          {
-            signal = STEADY;
-          }
-          else if (strcmp(signal_name, "triangle") == 0)
-          {
-            signal = TRIANGLE;
-          }
-          else if (strcmp(signal_name, "front teeth") == 0)
-          {
-            signal = FRONT_TEETH;
-          }
-          else if (strcmp(signal_name, "back teeth") == 0)
-          {
-            signal = BACK_TEETH;
-          }
-          signals[i].signal_type = signal;
-        }
-      }
-    }
-  }
-}
-
-void SaveRods(Rod rods[], int nbRods, FILE *file)
-{
-  int i;
-  fprintf(file, "%d ", nbRods);
-  for (i = 0; i < nbRods; i++)
-  {
-    fprintf(file, "%d %f %f ", rods[i].numericLength, rods[i].rect.x, rods[i].rect.y);
-  }
-}
-
-RodGroup *NewRodGroup(const char *spec_name)
-{
-  int i;
-  int nbRods;
-  FILE *f;
-  f = fopen(spec_name, "r");
-  if (f == NULL)
-  {
-    perror("Couldn't open the spec: ");
-  }
-  fscanf(f, "%d ", &nbRods);
-  RodGroup *rod_group = malloc(sizeof(RodGroup) + nbRods * sizeof(Rod));
-  rod_group->nbRods = nbRods;
-  for (i = 0; i < nbRods; i++)
-  {
-    int l;
-    float x;
-    float y;
-    fscanf(f, "%d %f %f ", &l, &x, &y);
-    rod_group->rods[i] = NewRod(l, x, y);
-  }
-  fclose(f);
-  return rod_group;
-}
-
-int main(int argc, char **argv)
-{
-
-  // Establish connection to haptic controller
-  int fd;
-  fd = connect_to_tty();
-
-  // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
-  set_direction(fd, 0, 10);
-
-  // Parse command line arguments -->
-  const char *config_name = DEFAULT_CONFIG;
-  const char *spec_name = DEFAULT_SPEC;
-
+void ParseArgs(int argc, char **argv, char **configName, char **specName) {
   int c;
   while ((c = getopt(argc, argv, "c:s:")) != -1)
   {
     switch (c)
     {
     case 'c':
-      config_name = optarg;
+      *configName = optarg;
       break;
     case 's':
-      spec_name = optarg;
+      *specName = optarg;
       break;
     case '?':
       if (optopt == 'c')
@@ -869,28 +466,38 @@ int main(int argc, char **argv)
       {
         fprintf(stderr, "Caractère inconnu : '\\x%x'.\n", optopt);
       }
-      return 1;
+      abort();
+      break;
     default:
       abort();
     }
   } // <-- Parse command line arguments
+}
+
+int main(int argc, char **argv)
+{
+
+  // Parse command line arguments -->
+  char *configName = (char *)DEFAULT_CONFIG;
+  char *specName = (char *)DEFAULT_SPEC;
+  ParseArgs(argc, argv, &configName, &specName);
 
   // Load config -->
   bool config_error = false;
-  config_t cfg = LoadConfig(&config_error, config_name);
+  config_t cfg = LoadConfig(&config_error, configName);
   if (config_error)
   {
     return (EXIT_FAILURE);
   }
-  // <-- Load config
 
-  AppState appState = InitAppState(cfg, spec_name);
+  AppState appState = InitAppState(cfg, specName);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
 #ifdef FULLSCREEN
   ToggleFullscreen();
 #endif
+
   SetTargetFPS(40);
 
   // Main loop
