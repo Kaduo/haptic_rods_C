@@ -132,20 +132,6 @@ void DrawRods(Rod rods[], int nbRods)
   }
 }
 
-// Deprecated
-void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift)
-{
-  int i;
-  for (i = 0; i < 10; i++)
-  {
-    rodsMenu[i + shift] =
-        (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
-                       (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
-              .color = COLORS[i],
-              .length = i + 1};
-  }
-}
-
 void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth)
 {
   int i;
@@ -479,27 +465,6 @@ void SaveRods(Rod rods[], int nb_rods, FILE *file)
   }
 }
 
-// Deprecated, use CreateRodGroupFromSpec instead
-void LoadRods(FILE *file, Rod rods[])
-{
-  int i;
-  int nb_rods;
-  fscanf(file, "%d ", &nb_rods);
-  for (i = 0; i < nb_rods; i++)
-  {
-    Rod rod;
-    int l;
-    float x;
-    float y;
-    fscanf(file, "%d %f %f ", &l, &x, &y);
-    rod.rect.x = x;
-    rod.rect.y = y;
-    rod.rect.width = UNIT_ROD_WIDTH * l;
-    rod.rect.height = ROD_HEIGHT;
-    rod.color = COLORS[l - 1];
-    rods[i] = rod;
-  }
-}
 
 RodGroup *CreateRodGroupFromSpec(const char *spec_name)
 {
@@ -532,8 +497,8 @@ int main(int argc, char **argv)
   int fd;
   fd = connect_to_tty();
 
-  // The haptic signal won't play if no direction is set.
-  set_direction(fd, 0, 10); // The value was chosen arbitrarily.
+  // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
+  set_direction(fd, 0, 10);
 
 
   // Parse command line arguments -->
