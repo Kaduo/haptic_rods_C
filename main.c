@@ -221,6 +221,8 @@ void UpdateTimeAndPlace(TimeAndPlace *tap) {
   if (tap->deltaTime > 0) {
     tap->speed = ComputeSpeedV(tap->mouseDelta, tap->deltaTime);
   }
+  printf("delta time : %f, speed: %f, mouseDeltaX: %f, mouseDeltaY: %f \n", tap->deltaTime, tap->speed, tap->mouseDelta.x, tap->mouseDelta.y);
+
 }
 
 typedef struct AppState
