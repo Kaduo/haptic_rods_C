@@ -143,7 +143,6 @@ typedef struct SignalState  {
 SignalState InitSignalState(config_t cfg) {
   Signal *signals = InitSignals(cfg);
   SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
-  printf("%d\n", signals[0].amplitude);
   if (signalState.fd != -1) {
       // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
     set_direction(signalState.fd, 0, 10);
@@ -204,7 +203,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
       }
     }
     if (sigs-> fd != -1) {
-        set_direction(sigs->fd, tap.angle, tap.speed); // TODO FIXME maybe
+        set_direction(sigs->fd, tap.angle, 50);
     }
   }
 }
