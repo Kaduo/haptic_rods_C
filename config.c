@@ -128,6 +128,7 @@ void InitSignals(config_t cfg, Signal signals[])
     SetExpr16ParameterOfSignal(
         &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
         "period_expr", 0xFFFF);
+        printf("YEP, SHOULD BE THERE!\n");
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
         i, "amplitude_expr", 0xFF);
@@ -206,6 +207,8 @@ void InitSignals(config_t cfg, Signal signals[])
         }
       }
     }
+  } else {
+    printf("HOLA\n");
   }
 
   int per_group = 0;
