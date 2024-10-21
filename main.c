@@ -166,7 +166,7 @@ Signal GetRodSignal(SignalState sigs, Rod rod) {
 void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace tap) {
   sigs->signalPlaying = SELECTED_ROD_SIGNAL;
   if (sigs->fd != -1) {
-      set_signal(sigs->fd, tap.angle, -1, GetRodSignal(*sigs, *secs.selectedRod));
+      set_signal(sigs->fd, 0, -1, GetRodSignal(*sigs, *secs.selectedRod));
   }
   printf("Now playing : the selected rod signal.\n");
 }
