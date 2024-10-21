@@ -203,7 +203,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
       }
     }
     if (sigs-> fd != -1) {
-        set_direction(sigs->fd, tap.angle, 50);
+        set_direction(sigs->fd, tap.angle, tap.speed);
     }
   }
 }
