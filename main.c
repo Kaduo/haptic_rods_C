@@ -41,8 +41,6 @@ int ComputeSpeedV(Vector2 deltaPos, float deltaT)
 {
   float speedf = abs(Vector2Length(deltaPos) /deltaT);
   int speed = floor(speedf);
-  printf("whouuo %f wahhaa %d\n", speedf, speed);
-
   return speed;
 }
 
