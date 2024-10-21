@@ -155,6 +155,7 @@ void ClearSignal(SignalState *sigs) {
   sigs->signalPlaying = NO_SIGNAL;
   if (sigs->fd != -1) {
     clear_signal(sigs->fd);
+    play_signal(sigs->fd, 0);
   }
   printf("Now playing : no signal.\n");
 }
