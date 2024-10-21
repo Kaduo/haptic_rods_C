@@ -50,6 +50,22 @@ int ComputeAngleV(Vector2 deltaPos) {
 
 
 
+void DrawRod(Rod rod)
+{
+  DrawRectangleRec(rod.rect, GetRodColor(rod));
+  DrawRectangleLinesEx(rod.rect, 1., BLACK);
+}
+
+void DrawRodGroup(RodGroup rodGroup[])
+{
+  for (int i = 0; i < rodGroup->nbRods; i++)
+  {
+    DrawRod(rodGroup->rods[i]);
+  }
+}
+
+
+
 typedef struct SelectionState
 {
   Rod *selectedRod;
@@ -62,6 +78,8 @@ SelectionState InitSelectionState()
   return (SelectionState){selectedRod: NULL, selectionTimer: 0, offset: (Vector2){0, 0}};
 }
 
+#define MAX_ROD_COLLIDING 22
+
 typedef struct CollisionState {
   int collisionTimer;
   bool collided;
@@ -69,8 +87,41 @@ typedef struct CollisionState {
 } CollisionState;
 
 CollisionState InitCollisionState() {
+  Rod collidingRods[MAX_ROD_COLLIDING];
   return (CollisionState){collisionTimer: 0, collided: false, collidedPreviously: false};
 }
+
+
+void UpdateCollisionTimer(CollisionState *s) {
+  if (s->collidedPreviously) {
+    s->collisionTimer += 1;
+  }
+}
+
+Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
+{
+  if (s.selectedRod == NULL)
+  {
+    fprintf(stderr, "A rod must be selected to speculate about its movement!\n");
+    abort();
+  }
+  else
+  {
+    Vector2 newTopLeft = Vector2Add(mousePosition, s.offset);
+    return NewRod(s.selectedRod->numericLength, newTopLeft.x, newTopLeft.y);
+  }
+}
+
+void ClearCollisionState(CollisionState *cs) {
+  cs->collided = false;
+  cs->collidedPreviously = false;
+  cs->collisionTimer = 0;
+}
+
+void RegisterCollision(CollisionState *cs) {
+  cs->collided = true;
+}
+
 
 typedef struct TimeAndPlace {
   Vector2 mousePosition;
@@ -212,36 +263,6 @@ void UpdateSelectionTimer(SelectionState *s)
   }
 }
 
-void UpdateCollisionTimer(CollisionState *s) {
-  if (s->collidedPreviously) {
-    s->collisionTimer += 1;
-  }
-}
-
-Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
-{
-  if (s.selectedRod == NULL)
-  {
-    fprintf(stderr, "A rod must be selected to speculate about its movement!\n");
-    abort();
-  }
-  else
-  {
-    Vector2 newTopLeft = Vector2Add(mousePosition, s.offset);
-    return NewRod(s.selectedRod->numericLength, newTopLeft.x, newTopLeft.y);
-  }
-}
-
-void ClearCollisionState(CollisionState *cs) {
-  cs->collided = false;
-  cs->collidedPreviously = false;
-  cs->collisionTimer = 0;
-}
-
-void RegisterCollision(CollisionState *cs) {
-  cs->collided = true;
-}
-
 void UpdateCollisionState(CollisionState *cs) {
   if (cs->collided) {
     cs->collisionTimer += 1;
@@ -252,78 +273,178 @@ void UpdateCollisionState(CollisionState *cs) {
   cs->collided = false;
 }
 
-void UpdateSelectedRodPosition(SelectionState *ss, CollisionState *cs, RodGroup *rodGroup, Vector2 mousePosition)
+typedef struct Corner {
+  Vector2 coords;
+  float dist;
+} Corner;
+
+int compareCorners(const void* a, const void *b) {
+  Corner corner_a = *( (Corner*) a);
+  Corner corner_b = *( (Corner*) b);
+
+  if (corner_a.dist < corner_b.dist) return 1;
+  else if (corner_a.dist > corner_b.dist) return -1;
+  else return 0;
+}
+
+typedef struct Bound {
+  float value;
+  enum StrictCollisionType collisionType;
+} Bound;
+
+Bound newBound(Rod boundingRod, enum StrictCollisionType collisionType) {
+  float value;
+  switch (collisionType) {
+    case FROM_ABOVE:
+      value = GetTop(boundingRod);
+      break;
+    case FROM_BELOW:
+      value = GetBottom(boundingRod);
+      break;
+
+    case FROM_RIGHT:
+      value = GetRight(boundingRod);
+      break;
+
+    case FROM_LEFT:
+      value = GetLeft(boundingRod);
+      break;
+
+    default:
+      fprintf(stderr, "SHOULDN'T HAPPEN!!\n ONLY CALL THIS FUNCTION WHEN THERE IS A COLLISION !\n");
+      abort();
+    }
+    return (Bound){value, collisionType};
+}
+
+
+void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup *rodGroup, TimeAndPlace tap)
 {
   if (ss->selectedRod == NULL)
   {
     return;
   }
-  Rod newRod = RodAfterSpeculativeMove(*ss, mousePosition);
+
+
+  Rod targetRod = RodAfterSpeculativeMove(*ss, tap.mousePosition);
+
+  Bound yBounds[22];
+  int nbYBounds = 0;
+
+  yBounds[0] = newBound(*(ss->selectedRod), FROM_RIGHT);
+  Bound xBounds[22];
+  int nbXBounds = 0;
+
 
   for (int i = 0; i < rodGroup->nbRods; i++)
   {
     Rod *otherRod = &rodGroup->rods[i];
     if (ss->selectedRod != otherRod)
     {
-      enum StrictCollisionType collisionType = CheckStrictCollision(*(ss->selectedRod), newRod, rodGroup->rods[i]);
+      StrictCollisionType collisionType = CheckStrictCollision(*(ss->selectedRod), targetRod, *otherRod);
       if (collisionType != NO_STRICT_COLLISION) {
         RegisterCollision(cs);
-        switch (collisionType)
-        {
-        case FROM_ABOVE:
-          SetBottom(&newRod, GetTop(*otherRod));
-          break;
-        case FROM_BELOW:
-          SetTop(&newRod, GetBottom(*otherRod));
-          break;
-        case FROM_RIGHT:
-          SetLeft(&newRod, GetRight(*otherRod));
-          break;
-        case FROM_LEFT:
-          SetRight(&newRod, GetLeft(*otherRod));
-          break;
-        default:
-          fprintf(stderr, "SHOULDN'T HAPPEN!!");
-          abort();
+
+        if (collisionType == FROM_ABOVE || collisionType ==  FROM_BELOW) {
+          yBounds[nbYBounds] = newBound(*otherRod, collisionType);
+          nbYBounds += 1;
+        } else {
+
+
+          xBounds[nbXBounds] = newBound(*otherRod, collisionType);
+          nbXBounds += 1;
         }
       }
     }
   }
 
-  // If two rods would get merged by the move, do nothing.
-  for (int i = 0; i < rodGroup->nbRods; i++)
-  {
-    Rod *otherRod = &rodGroup->rods[i];
-    if (ss->selectedRod != otherRod && StrictlyCollide(newRod, *otherRod))
-    {
-      return;
+
+  if (!cs->collided){
+    *ss->selectedRod = targetRod;
+    return;
+  }
+
+  yBounds[nbYBounds] = (Bound){value: GetBottom(targetRod), FROM_ABOVE};
+  nbYBounds += 1;
+
+  xBounds[nbXBounds] = (Bound){value: GetRight(targetRod), FROM_LEFT};
+  nbXBounds += 1;
+
+  yBounds[nbYBounds] = (Bound){value: GetBottom(*(ss->selectedRod)), FROM_ABOVE};
+  nbYBounds += 1;
+
+  xBounds[nbXBounds] = (Bound){value: GetRight(*(ss->selectedRod)), FROM_LEFT};
+  nbXBounds += 1;
+
+  Rod candidateRod = *(ss->selectedRod);
+  Rod bestRod = *(ss->selectedRod);
+  float bestDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
+  for (int ix = 0; ix < nbXBounds; ix++) {
+    for (int iy = 0; iy < nbYBounds; iy++) {
+      if (yBounds[iy].collisionType == FROM_ABOVE) {
+        SetBottom(&candidateRod, yBounds[iy].value);
+      } else {
+        SetTop(&candidateRod, yBounds[iy].value);
+      }
+      
+      if (xBounds[ix].collisionType == FROM_LEFT) {
+        SetRight(&candidateRod, xBounds[ix].value);
+      } else {
+        SetLeft(&candidateRod, xBounds[ix].value);
+      }
+
+      float candidateDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
+
+      if (candidateDist < bestDist) {
+        bool noCollision = true;
+        for (int i = 0; i < rodGroup->nbRods; i++) {
+          if (&rodGroup->rods[i] != ss->selectedRod && StrictlyCollide(rodGroup->rods[i], candidateRod)) {
+            noCollision = false;
+            break;
+          }
+        }
+        if (noCollision) {
+          bestDist = candidateDist;
+          bestRod = candidateRod;
+        }
+      }
+
     }
   }
-  ss->selectedRod->rect = newRod.rect;
+  SetTopLeft(ss->selectedRod, GetTopLeft(bestRod));
 }
+
+
 
 void UpdateAppState(AppState *s)
 {
-  
   UpdateTimeAndPlace(&s->timeAndPlace);
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
   {
+
     SelectRodUnderMouse(&s->selectionState, s->rodGroup, s->timeAndPlace.mousePosition);
+
   }
   else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
   {
+
     ClearSelection(&s->selectionState);
     ClearCollisionState(&s->collisionState);
     ClearSignal(&s->signalState);
   }
   else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
   {
-    UpdateSelectedRodPosition(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace.mousePosition);
+    UpdateSelectedRodPosition2(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace);
+    
   }
 
   UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
+  
+  
   UpdateCollisionState(&s->collisionState);
+
+
   UpdateSelectionTimer(&s->selectionState);
 }
 
@@ -338,21 +459,6 @@ void ChangeAppSpec(AppState *s, char *specName) {
   free(s->rodGroup);
   s->rodGroup = NewRodGroup(specName);
 }
-
-void DrawRod(Rod rod)
-{
-  DrawRectangleRec(rod.rect, GetRodColor(rod));
-  DrawRectangleLinesEx(rod.rect, 1., BLACK);
-}
-
-void DrawRodGroup(RodGroup rodGroup[])
-{
-  for (int i = 0; i < rodGroup->nbRods; i++)
-  {
-    DrawRod(rodGroup->rods[i]);
-  }
-}
-
 
 void ParseArgs(int argc, char **argv, char **configName, char **specName) {
   int c;

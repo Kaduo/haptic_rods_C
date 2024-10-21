@@ -7,16 +7,19 @@ extern const int ROD_HEIGHT;
 
 extern const Color COLORS[NB_RODS_MENU];
 
+#ifndef RODSS
+#define RODSS
 
-enum StrictCollisionType
+typedef enum StrictCollisionType
 {
   NO_STRICT_COLLISION,
   FROM_LEFT,
   FROM_RIGHT,
   FROM_ABOVE,
-  FROM_BELOW
-};
+  FROM_BELOW,
+} StrictCollisionType;
 
+#endif
 typedef struct Rod
 {
   Rectangle rect;

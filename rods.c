@@ -204,7 +204,7 @@ bool SoftlyCollide(Rod rod1, Rod rod2)
 }
 
 
-enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod)
+StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod)
 {
   if (!StrictlyCollide(rod_after, other_rod))
   {
