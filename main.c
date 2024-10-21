@@ -144,6 +144,7 @@ SignalState InitSignalState(config_t cfg) {
   Signal signals[NB_RODS_MENU];
   InitSignals(cfg, signals);
   SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
+  printf("%d\n", signals[0].amplitude);
   if (signalState.fd != -1) {
       // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
     set_direction(signalState.fd, 0, 10);
@@ -492,6 +493,8 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName) {
 
 int main(int argc, char **argv)
 {
+
+  SetTraceLogLevel(LOG_ERROR);
 
   // Parse command line arguments -->
   char *configName = (char *)DEFAULT_CONFIG;
