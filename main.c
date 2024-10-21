@@ -25,7 +25,7 @@ static const char DEFAULT_CONFIG[] = "config.cfg";
 static const char DEFAULT_SPEC[] = "spec.rods";
 
 
-const int SIGNAL_MUST_PLAY_PERIOD = 3;
+const int SIGNAL_MUST_PLAY_PERIOD = 0;
 const int IMPULSE_DURATION = 2;
 
 const Signal IMPULSE_SIGNAL = (Signal){
@@ -87,7 +87,6 @@ typedef struct CollisionState {
 } CollisionState;
 
 CollisionState InitCollisionState() {
-  Rod collidingRods[MAX_ROD_COLLIDING];
   return (CollisionState){collisionTimer: 0, collided: false, collidedPreviously: false};
 }
 
@@ -422,13 +421,10 @@ void UpdateAppState(AppState *s)
 
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
   {
-
     SelectRodUnderMouse(&s->selectionState, s->rodGroup, s->timeAndPlace.mousePosition);
-
   }
   else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
   {
-
     ClearSelection(&s->selectionState);
     ClearCollisionState(&s->collisionState);
     ClearSignal(&s->signalState);
@@ -436,15 +432,10 @@ void UpdateAppState(AppState *s)
   else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
   {
     UpdateSelectedRodPosition2(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace);
-    
   }
 
   UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
-  
-  
   UpdateCollisionState(&s->collisionState);
-
-
   UpdateSelectionTimer(&s->selectionState);
 }
 
