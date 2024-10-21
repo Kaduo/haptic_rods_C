@@ -204,7 +204,6 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
         PlayImpulse(sigs);
       }
     }
-    printf("speed : %d, angle : %d\n", tap.speed, tap.angle);
     if (sigs-> fd != -1) {
         set_direction(sigs->fd, tap.angle, tap.speed); // TODO FIXME maybe
     }
@@ -225,7 +224,6 @@ void UpdateTimeAndPlace(TimeAndPlace *tap) {
   if (tap->deltaTime > 0) {
     tap->speed = ComputeSpeedV(tap->mouseDelta, tap->deltaTime);
   }
-  printf("delta time : %f, speed: %d, mouseDeltaX: %f, mouseDeltaY: %f \n", tap->deltaTime, tap->speed, tap->mouseDelta.x, tap->mouseDelta.y);
 }
 
 typedef struct AppState
