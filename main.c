@@ -202,7 +202,8 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
         PlayImpulse(sigs);
       }
     }
-    set_direction(sigs->fd, tap.angle, 5); // TODO FIXME maybe
+    printf("speed : %f, angle : %f\n", tap.speed, tap.angle);
+    set_direction(sigs->fd, tap.angle, tap.speed); // TODO FIXME maybe
   }
 }
 
