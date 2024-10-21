@@ -122,7 +122,10 @@ void PlayImpulse(SignalState *sigs) {
 
 void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState cols, TimeAndPlace tap) {
   if (secs.selectedRod == NULL) {
-    ClearSignal(sigs);
+    if (sigs->signalPlaying != NO_SIGNAL) {
+        ClearSignal(sigs);
+    }
+    return;
   }
   else if (!cols.collided && sigs->signalPlaying == NO_SIGNAL) {
     SetSelectedRodSignal(sigs, secs, tap);
@@ -135,6 +138,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
     } else if (sigs->signalPlaying == IMPULSE && cols.collisionTimer > SIGNAL_MUST_PLAY_PERIOD + IMPULSE_DURATION) {
         ClearSignal(sigs);
     } else if (sigs->signalPlaying == SELECTED_ROD_SIGNAL && secs.selectionTimer > SIGNAL_MUST_PLAY_PERIOD) {
+      printf("hello world\n");
       PlayImpulse(sigs);
     }
   }
@@ -425,6 +429,7 @@ void UpdateAppState(AppState *s)
   }
 
   UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
+  UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
 }
 
