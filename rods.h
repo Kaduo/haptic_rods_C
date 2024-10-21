@@ -8,6 +8,14 @@ extern const int ROD_HEIGHT;
 extern const Color COLORS[NB_RODS_MENU];
 
 
+enum StrictCollisionType
+{
+  NO_STRICT_COLLISION,
+  FROM_LEFT,
+  FROM_RIGHT,
+  FROM_ABOVE,
+  FROM_BELOW
+};
 
 typedef struct Rod
 {
@@ -45,3 +53,6 @@ void SetRight(Rod *rod, float right);
 void SetTopLeft(Rod *rod, Vector2 newPos);
 Color GetRodColor(Rod rod);
 RodGroup *NewRodGroup(const char *spec_name);
+
+bool StrictlyCollide(Rod rod1, Rod rod2);
+enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod);

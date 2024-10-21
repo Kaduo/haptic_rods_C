@@ -115,12 +115,120 @@ RodGroup *NewRodGroup(const char *spec_name)
 }
 
 
-void SaveRodGroup(RodGroup rodGroup, FILE *file)
+void SaveRodGroup(RodGroup *rodGroup, FILE *file)
 {
-  fprintf(file, "%d ", rodGroup.nbRods);
-  for (int i = 0; i < rodGroup.nbRods; i++)
+  fprintf(file, "%d ", rodGroup->nbRods);
+  for (int i = 0; i < rodGroup->nbRods; i++)
   {
-    Rod rod = rodGroup.rods[i];
+    Rod rod = rodGroup->rods[i];
     fprintf(file, "%d %f %f ", rod.numericLength, rod.rect.x, rod.rect.y);
+  }
+}
+
+
+
+enum RelativeYPosition
+{
+  STRICTLY_ABOVE = 0x01,
+  STRICTLY_BELOW = 0x02,
+  JUST_ABOVE = 0x04,
+  JUST_BELOW = 0x08,
+  Y_ALIGNED = 0x10
+};
+
+enum RelativeXPosition
+{
+  STRICTLY_LEFT = 0x01,
+  STRICTLY_RIGHT = 0x02,
+  JUST_LEFT = 0x04,
+  JUST_RIGHT = 0x08,
+  X_ALIGNED = 0x10
+};
+
+enum RelativeYPosition RelativeYPosition(Rod rod1, Rod rod2)
+{
+  if (GetBottom(rod1) < GetTop(rod2))
+  {
+    return STRICTLY_ABOVE;
+  }
+  else if (GetBottom(rod1) == GetTop(rod2))
+  {
+    return JUST_ABOVE;
+  }
+  else if (GetTop(rod1) > GetBottom(rod2))
+  {
+    return STRICTLY_BELOW;
+  }
+  else if (GetTop(rod1) == GetBottom(rod2))
+  {
+    return JUST_BELOW;
+  }
+  else
+  {
+    return Y_ALIGNED;
+  }
+}
+
+enum RelativeXPosition RelativeXPosition(Rod rod1, Rod rod2)
+{
+  if (GetRight(rod1) < GetLeft(rod2))
+  {
+    return STRICTLY_LEFT;
+  }
+  else if (GetRight(rod1) == GetLeft(rod2))
+  {
+    return JUST_LEFT;
+  }
+  else if (GetLeft(rod1) > GetRight(rod2))
+  {
+    return STRICTLY_RIGHT;
+  }
+  else if (GetLeft(rod1) == GetRight(rod2))
+  {
+    return JUST_RIGHT;
+  }
+  else
+  {
+    return X_ALIGNED;
+  }
+}
+
+bool StrictlyCollide(Rod rod1, Rod rod2)
+{
+  return (RelativeXPosition(rod1, rod2) == X_ALIGNED) && (RelativeYPosition(rod1, rod2) == Y_ALIGNED);
+}
+
+bool SoftlyCollide(Rod rod1, Rod rod2)
+{
+  return (RelativeXPosition(rod1, rod2) & (X_ALIGNED | JUST_RIGHT | JUST_LEFT)) && (RelativeYPosition(rod1, rod2) & (Y_ALIGNED | JUST_ABOVE | JUST_BELOW));
+}
+
+
+enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod)
+{
+  if (!StrictlyCollide(rod_after, other_rod))
+  {
+    return NO_STRICT_COLLISION;
+  }
+
+  switch (RelativeYPosition(rod_before, other_rod))
+  {
+  case JUST_ABOVE: case STRICTLY_ABOVE:
+    return FROM_ABOVE;
+  case JUST_BELOW: case STRICTLY_BELOW:
+    return FROM_BELOW;
+  default:
+    break;
+  }
+
+  switch (RelativeXPosition(rod_before, other_rod))
+  {
+  case JUST_LEFT: case STRICTLY_LEFT:
+    return FROM_LEFT;
+  case JUST_RIGHT: case STRICTLY_RIGHT:
+    return FROM_RIGHT;
+  default:
+    fprintf(stderr, "THIS HSHOLDN4T AHPPEN!\n");
+    return NO_STRICT_COLLISION;
   }
 }

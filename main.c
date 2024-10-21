@@ -103,7 +103,10 @@ SignalState InitSignalState(config_t cfg) {
 
 void ClearSignal(SignalState *sigs) {
   sigs->signalPlaying = NO_SIGNAL;
-  clear_signal(sigs->fd);
+  if (sigs->fd != -1) {
+    clear_signal(sigs->fd);
+  }
+  printf("Now playing : no signal.\n");
 }
 
 Signal GetRodSignal(SignalState sigs, Rod rod) {
@@ -112,12 +115,18 @@ Signal GetRodSignal(SignalState sigs, Rod rod) {
 
 void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace tap) {
   sigs->signalPlaying = SELECTED_ROD_SIGNAL;
-  set_signal(sigs->fd, tap.angle, -1, GetRodSignal(*sigs, *secs.selectedRod));
+  if (sigs->fd != -1) {
+      set_signal(sigs->fd, tap.angle, -1, GetRodSignal(*sigs, *secs.selectedRod));
+  }
+  printf("Now playing : the selected rod signal.\n");
 }
 
 void PlayImpulse(SignalState *sigs) {
   sigs->signalPlaying = IMPULSE;
-  set_signal(sigs->fd, -1, -1, IMPULSE_SIGNAL);
+  if (sigs->fd != -1) {
+    set_signal(sigs->fd, -1, -1, IMPULSE_SIGNAL);
+  }
+  printf("Now playing : the impulse signal.\n");
 }
 
 void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState cols, TimeAndPlace tap) {
@@ -138,7 +147,6 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
     } else if (sigs->signalPlaying == IMPULSE && cols.collisionTimer > SIGNAL_MUST_PLAY_PERIOD + IMPULSE_DURATION) {
         ClearSignal(sigs);
     } else if (sigs->signalPlaying == SELECTED_ROD_SIGNAL && secs.selectionTimer > SIGNAL_MUST_PLAY_PERIOD) {
-      printf("hello world\n");
       PlayImpulse(sigs);
     }
   }
@@ -221,120 +229,6 @@ Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
   {
     Vector2 newTopLeft = Vector2Add(mousePosition, s.offset);
     return NewRod(s.selectedRod->numericLength, newTopLeft.x, newTopLeft.y);
-  }
-}
-
-enum StrictCollisionType
-{
-  NO_STRICT_COLLISION,
-  FROM_LEFT,
-  FROM_RIGHT,
-  FROM_ABOVE,
-  FROM_BELOW
-};
-
-enum RelativeYPosition
-{
-  STRICTLY_ABOVE = 0x01,
-  STRICTLY_BELOW = 0x02,
-  JUST_ABOVE = 0x04,
-  JUST_BELOW = 0x08,
-  Y_ALIGNED = 0x10
-};
-
-enum RelativeXPosition
-{
-  STRICTLY_LEFT = 0x01,
-  STRICTLY_RIGHT = 0x02,
-  JUST_LEFT = 0x04,
-  JUST_RIGHT = 0x08,
-  X_ALIGNED = 0x10
-};
-
-enum RelativeYPosition RelativeYPosition(Rod rod1, Rod rod2)
-{
-  if (GetBottom(rod1) < GetTop(rod2))
-  {
-    return STRICTLY_ABOVE;
-  }
-  else if (GetBottom(rod1) == GetTop(rod2))
-  {
-    return JUST_ABOVE;
-  }
-  else if (GetTop(rod1) > GetBottom(rod2))
-  {
-    return STRICTLY_BELOW;
-  }
-  else if (GetTop(rod1) == GetBottom(rod2))
-  {
-    return JUST_BELOW;
-  }
-  else
-  {
-    return Y_ALIGNED;
-  }
-}
-
-enum RelativeXPosition RelativeXPosition(Rod rod1, Rod rod2)
-{
-  if (GetRight(rod1) < GetLeft(rod2))
-  {
-    return STRICTLY_LEFT;
-  }
-  else if (GetRight(rod1) == GetLeft(rod2))
-  {
-    return JUST_LEFT;
-  }
-  else if (GetLeft(rod1) > GetRight(rod2))
-  {
-    return STRICTLY_RIGHT;
-  }
-  else if (GetLeft(rod1) == GetRight(rod2))
-  {
-    return JUST_RIGHT;
-  }
-  else
-  {
-    return X_ALIGNED;
-  }
-}
-
-bool StrictlyCollide(Rod rod1, Rod rod2)
-{
-  return (RelativeXPosition(rod1, rod2) == X_ALIGNED) && (RelativeYPosition(rod1, rod2) == Y_ALIGNED);
-}
-
-bool SoftlyCollide(Rod rod1, Rod rod2)
-{
-  return (RelativeXPosition(rod1, rod2) & (X_ALIGNED | JUST_RIGHT | JUST_LEFT)) && (RelativeYPosition(rod1, rod2) & (Y_ALIGNED | JUST_ABOVE | JUST_BELOW));
-}
-
-enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod)
-{
-  if (!StrictlyCollide(rod_after, other_rod))
-  {
-    return NO_STRICT_COLLISION;
-  }
-
-  switch (RelativeYPosition(rod_before, other_rod))
-  {
-  case JUST_ABOVE: case STRICTLY_ABOVE:
-    return FROM_ABOVE;
-  case JUST_BELOW: case STRICTLY_BELOW:
-    return FROM_BELOW;
-  default:
-    break;
-  }
-
-  switch (RelativeXPosition(rod_before, other_rod))
-  {
-  case JUST_LEFT: case STRICTLY_LEFT:
-    return FROM_LEFT;
-  case JUST_RIGHT: case STRICTLY_RIGHT:
-    return FROM_RIGHT;
-  default:
-    fprintf(stderr, "THIS HSHOLDN4T AHPPEN!\n");
-    return NO_STRICT_COLLISION;
   }
 }
 
