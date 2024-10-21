@@ -355,7 +355,7 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName) {
       *specName = optarg;
       break;
     case '?':
-      if (optopt == 'c')
+      if (optopt == 'c' || optopt == 's')
       {
         fprintf(stderr, "L'option -%c nécessite un argument.\n", optopt);
       }
@@ -372,7 +372,7 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName) {
     default:
       abort();
     }
-  } // <-- Parse command line arguments
+  }
 }
 
 int main(int argc, char **argv)
