@@ -501,6 +501,7 @@ int main(int argc, char **argv)
   // Load config -->
   bool config_error = false;
   config_t cfg = LoadConfig(&config_error, configName);
+  printf("CONFIG : %s", configName);
   if (config_error)
   {
     return (EXIT_FAILURE);
