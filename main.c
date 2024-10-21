@@ -127,8 +127,8 @@ typedef struct TimeAndPlace {
   Vector2 mouseDelta;
   float time;
   float deltaTime;
-  int speed;
-  int angle;
+  uint16_t speed;
+  uint8_t angle;
 } TimeAndPlace;
 
 
@@ -201,7 +201,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
         PlayImpulse(sigs);
       }
     }
-    set_direction(sigs->fd, 12, tap.speed);
+    set_direction(sigs->fd, tap.angle, tap.speed);
   }
 }
 
