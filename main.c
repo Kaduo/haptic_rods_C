@@ -202,7 +202,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
         PlayImpulse(sigs);
       }
     }
-    set_direction(sigs->fd, tap.angle, 1000); // TODO FIXME maybe
+    set_direction(sigs->fd, tap.angle, 10); // TODO FIXME maybe
   }
 }
 
