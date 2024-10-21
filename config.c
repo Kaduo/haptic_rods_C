@@ -7,6 +7,7 @@
 #include <libconfig.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 const double PARAMETER_NOT_SET = -10;
 
@@ -114,9 +115,10 @@ void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
 
 
 
-void InitSignals(config_t cfg, Signal signals[])
+Signal *InitSignals(config_t cfg)
 {
 
+  Signal *signals = malloc(10*sizeof(Signal));
   char *signal_parameter_name = "signal_type";
   SignalType signal = SINE;
   SetSignalKind(&cfg, &signal);
@@ -128,10 +130,10 @@ void InitSignals(config_t cfg, Signal signals[])
     SetExpr16ParameterOfSignal(
         &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
         "period_expr", 0xFFFF);
-        printf("YEP, SHOULD BE THERE!\n");
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
         i, "amplitude_expr", 0xFF);
+    printf("HIHIHI : %d\n", signals[i].amplitude);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
         "duty_expr", 0xFF);
@@ -278,4 +280,6 @@ void InitSignals(config_t cfg, Signal signals[])
       }
     }
   }
+
+  return signals;
 }

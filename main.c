@@ -141,8 +141,7 @@ typedef struct SignalState  {
 } SignalState;
 
 SignalState InitSignalState(config_t cfg) {
-  Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals);
+  Signal *signals = InitSignals(cfg);
   SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
   printf("%d\n", signals[0].amplitude);
   if (signalState.fd != -1) {
@@ -171,6 +170,7 @@ void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace t
       set_signal(sigs->fd, -1, -1, GetRodSignal(*sigs, *secs.selectedRod));
   }
   printf("Now playing : the selected rod signal.\n");
+  PrintSignal(GetRodSignal(*sigs, *secs.selectedRod));
 }
 
 void PlayImpulse(SignalState *sigs) {
