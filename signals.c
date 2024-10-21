@@ -141,3 +141,7 @@ Signal signal_new(SignalType signal_type, uint8_t amplitude, uint8_t offset, uin
     sig.phase = phase;
     return sig;
 }
+
+void PrintSignal(Signal sig) {
+    printf("amplitude : %d, offset : %d, duty : %d, period: %d, phase: %d\n", sig.amplitude, sig.offset, sig.duty, sig.period, sig.phase);
+}

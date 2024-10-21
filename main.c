@@ -2,8 +2,9 @@
 #include "raymath.h"
 #define TERMINAL "/dev/ttyUSB0"
 
+#include "config.h"
 #include "signals.h"
-#include "tinyexpr.h"
+#include "rods.h"
 #include <fcntl.h>
 #include <libconfig.h>
 #include <stddef.h>
@@ -12,592 +13,510 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <ctype.h>
 
-//#define FULLSCREEN //TODO: remove
+#define NB_RODS_MENU 10
 
-const int NB_RODS_MENU = 10;
-const int UNIT_ROD_WIDTH = 40;
-const int ROD_HEIGHT = 40;
-const int SELECTION_COUNTDOWN = 3;
-const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
-                        DARKGREEN, BLACK, BROWN, BLUE, ORANGE};
-
-const int TABLET_WIDTH = 1000;
+const int TABLET_LENGTH = 1000;
 const int TABLED_HEIGHT = 600;
-
-const double PARAMETER_NOT_SET = -10;
 
 static const char DEFAULT_CONFIG[] = "config.cfg";
 static const char DEFAULT_SPEC[] = "spec.rods";
 
-typedef struct Rod
-{
-  Rectangle rect;
-  Color color;
-  int length;
-} Rod;
 
-typedef struct RodGroup
-{
-  int nb_rods;
-  Rod rods[];
-} RodGroup;
+const int SIGNAL_MUST_PLAY_PERIOD = 0;
+const int IMPULSE_DURATION = 2;
 
-typedef struct SelectionState {
-  bool selected;
+const Signal IMPULSE_SIGNAL = (Signal){
+  STEADY,
+  255,
+  255,
+  0,
+  0,
+  0,
+};
+
+int ComputeSpeedV(Vector2 deltaPos, float deltaT)
+{
+  float speedf = abs(Vector2Length(deltaPos) /deltaT);
+  int speed = floor(speedf);
+  return speed;
+}
+
+int ComputeAngleV(Vector2 deltaPos) {
+  return Vector2Angle((Vector2){1, 0}, deltaPos);
+}
+
+
+
+void DrawRod(Rod rod)
+{
+  DrawRectangleRec(rod.rect, GetRodColor(rod));
+  DrawRectangleLinesEx(rod.rect, 1., BLACK);
+}
+
+void DrawRodGroup(RodGroup rodGroup[])
+{
+  for (int i = 0; i < rodGroup->nbRods; i++)
+  {
+    DrawRod(rodGroup->rods[i]);
+  }
+}
+
+
+
+typedef struct SelectionState
+{
   Rod *selectedRod;
-  int selectionCountdown;
-  int offsetX;
-  int offsetY;
+  int selectionTimer;
+  Vector2 offset;
 } SelectionState;
 
-SelectionState InitSelectionState() {
-  SelectionState s;
-  s.selected = false;
-  s.selectionCountdown = 0;
-  s.offsetX = 0;
-  s.offsetY = 0;
-  return  s;
+SelectionState InitSelectionState()
+{
+  return (SelectionState){selectedRod: NULL, selectionTimer: 0, offset: (Vector2){0, 0}};
 }
 
-void SelectRod(SelectionState *s, Rod *rod, Vector2 mousePosition) {
-  s->selected = true;
-  s->selectedRod = rod;
-  s->selectionCountdown = SELECTION_COUNTDOWN;
-  s->offsetX = rod->rect.x - mousePosition.x;
-  s->offsetY = rod->rect.y - mousePosition.y;
-}
-
-void UnselectRod(SelectionState *s) {
-  s->selected = false;
-  s->selectionCountdown = 0;
-}
+#define MAX_ROD_COLLIDING 22
 
 typedef struct CollisionState {
-  
+  int collisionTimer;
+  bool collided;
+  bool collidedPreviously;
 } CollisionState;
 
-// void UpdateSelectionState(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition) {
-//     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-//     {
-
-//       /* Right after selecting a rod, there is a short period during
-//       which its signal is guaranteed to play, even if there is a collision.*/
-//       signalMustPlayFrameCount = 3;
-
-//       // For each rod, check if it's under the mouse.
-//       int i;
-//       for (i = 0; i < rodGroup->nb_rods; i++)
-//       {
-//         if (CheckCollisionPointRec(mousePosition, rodGroup->rods[i].rect))
-//         {
-//           s->selectedIdx = i;
-//           s->offsetX = rodGroup->rods[i].rect.x - mousePosition.x;
-//           s->offsetY = rodGroup->rods[i].rect.y - mousePosition.y;
-
-//           set_signal(fd, -1, -1, signals[rods[i].length - 1]);
-//           break;
-//         }
-//       }
-//     }
-//     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-//     {
-//       selected = -1;
-//       clear_signal(fd);
-//       collision_frame_count = 0;
-//     }
-
-// }
-
-Rod CreateRod(int l, float x, float y) {
-  Rod rod;
-  rod.rect.x = x;
-  rod.rect.y = y;
-  rod.rect.width = UNIT_ROD_WIDTH * l;
-  rod.rect.height = ROD_HEIGHT;
-  rod.length = l;
-  rod.color = COLORS[l - 1];
-  return rod;
+CollisionState InitCollisionState() {
+  return (CollisionState){collisionTimer: 0, collided: false, collidedPreviously: false};
 }
 
-void DrawRods(Rod rods[], int nbRods)
-{
-  int i;
-  for (i = 0; i < nbRods; i++)
-  {
-    DrawRectangleRec(rods[i].rect, rods[i].color);
-    DrawRectangleLinesEx(rods[i].rect, 1., BLACK);
+
+void UpdateCollisionTimer(CollisionState *s) {
+  if (s->collidedPreviously) {
+    s->collisionTimer += 1;
   }
 }
 
-// Deprecated
-void InitRodsMenu(Rod rodsMenu[], int width, int height, int shift)
+Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
 {
-  int i;
-  for (i = 0; i < 10; i++)
+  if (s.selectedRod == NULL)
   {
-    rodsMenu[i + shift] =
-        (Rod){.rect = {shift * UNIT_ROD_WIDTH, i * (ROD_HEIGHT + 1),
-                       (i + 1) * UNIT_ROD_WIDTH, ROD_HEIGHT},
-              .color = COLORS[i],
-              .length = i + 1};
+    fprintf(stderr, "A rod must be selected to speculate about its movement!\n");
+    abort();
+  }
+  else
+  {
+    Vector2 newTopLeft = Vector2Add(mousePosition, s.offset);
+    return NewRod(s.selectedRod->numericLength, newTopLeft.x, newTopLeft.y);
   }
 }
 
-void InitRods(Rod rods[], int nbRodsPerLength[], int screenWidth)
-{
-  int i;
-  int j;
-  int x = 0;
-  int y = 0;
-  int current_length = 0;
-  int k = 0;
-  for (i = 0; i < 10; i++)
-  {
-    current_length += UNIT_ROD_WIDTH;
-    for (j = 0; j < nbRodsPerLength[i]; j++)
-    {
-      if (current_length + x > screenWidth)
-      {
-        x = 0;
-        y += ROD_HEIGHT + 1;
+void ClearCollisionState(CollisionState *cs) {
+  cs->collided = false;
+  cs->collidedPreviously = false;
+  cs->collisionTimer = 0;
+}
+
+void RegisterCollision(CollisionState *cs) {
+  cs->collided = true;
+}
+
+
+typedef struct TimeAndPlace {
+  Vector2 mousePosition;
+  Vector2 mouseDelta;
+  float time;
+  float deltaTime;
+  uint16_t speed;
+  uint8_t angle;
+} TimeAndPlace;
+
+
+enum SignalPlaying{NO_SIGNAL, IMPULSE, SELECTED_ROD_SIGNAL};
+
+typedef struct SignalState  {
+  enum SignalPlaying signalPlaying;
+  Signal *signals;
+  int fd;
+} SignalState;
+
+SignalState InitSignalState(config_t cfg) {
+  Signal *signals = InitSignals(cfg);
+  SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
+  if (signalState.fd != -1) {
+      // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
+    set_direction(signalState.fd, 0, 10);
+  }
+  return signalState;
+}
+
+void ClearSignal(SignalState *sigs) {
+  sigs->signalPlaying = NO_SIGNAL;
+  if (sigs->fd != -1) {
+    clear_signal(sigs->fd);
+    play_signal(sigs->fd, 0);
+  }
+  printf("Now playing : no signal.\n");
+}
+
+Signal GetRodSignal(SignalState sigs, Rod rod) {
+  return sigs.signals[rod.numericLength -1];
+}
+
+void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace tap) {
+  sigs->signalPlaying = SELECTED_ROD_SIGNAL;
+  if (sigs->fd != -1) {
+      set_signal(sigs->fd, -1, -1, GetRodSignal(*sigs, *secs.selectedRod));
+  }
+  printf("Now playing : the selected rod signal.\n");
+  PrintSignal(GetRodSignal(*sigs, *secs.selectedRod));
+}
+
+void PlayImpulse(SignalState *sigs) {
+  sigs->signalPlaying = IMPULSE;
+  if (sigs->fd != -1) {
+    set_signal(sigs->fd, -1, -1, IMPULSE_SIGNAL);
+  }
+  printf("Now playing : the impulse signal.\n");
+}
+
+void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState cols, TimeAndPlace tap) {
+  if (secs.selectedRod == NULL) {
+    if (sigs->signalPlaying != NO_SIGNAL) {
+        ClearSignal(sigs);
+    }
+    return;
+  }
+  else {
+    if (!cols.collided && sigs->signalPlaying != SELECTED_ROD_SIGNAL) {
+      SetSelectedRodSignal(sigs, secs, tap);
+    }
+    else if (cols.collided) {
+      if (sigs->signalPlaying == NO_SIGNAL) {
+        if (secs.selectionTimer <= SIGNAL_MUST_PLAY_PERIOD) {
+          SetSelectedRodSignal(sigs, secs, tap);
+        }
+      } else if (sigs->signalPlaying == IMPULSE && cols.collisionTimer > SIGNAL_MUST_PLAY_PERIOD + IMPULSE_DURATION) {
+          ClearSignal(sigs);
+      } else if (sigs->signalPlaying == SELECTED_ROD_SIGNAL && secs.selectionTimer > SIGNAL_MUST_PLAY_PERIOD) {
+        PlayImpulse(sigs);
       }
-      rods[k] = (Rod){.rect = {x, y, current_length, ROD_HEIGHT},
-                      .color = COLORS[i],
-                      .length = i + 1};
-      k += 1;
-      x += current_length + 1;
+    }
+    if (sigs-> fd != -1) {
+        set_direction(sigs->fd, tap.angle, tap.speed);
     }
   }
 }
 
-bool IsCollisionOnHorizontalAxis(Rectangle rect1, Rectangle rect2)
-{
-  return ((rect2.x <= rect1.x) && (rect1.x <= rect2.x + rect2.width)) ||
-         ((rect2.x <= rect1.x + rect1.width) &&
-          (rect1.x + rect1.width <= rect2.x + rect2.width));
+
+TimeAndPlace InitTimeAndPlace() {
+  return (TimeAndPlace){GetMousePosition(), GetMouseDelta(), GetTime(), GetFrameTime(), 0, 0};
 }
 
-int ComputeSpeed(float deltaX, float deltaY, float *oldTime)
-{
-  float newTime = GetTime();
-  int speed;
-  float speedf;
-  if ((*oldTime != 0) && (newTime - *oldTime != 0))
-  {
-    speedf = Vector2Length((Vector2){.x = deltaX, .y = deltaY}) /
-             (newTime - *oldTime);
-    speed = floor(speedf);
-  }
-  else
-  {
-    speed = 1000;
-  }
-  *oldTime = newTime;
-  return abs(speed);
-}
-
-int ComputeAngle(float deltaX, float deltaY)
-{
-  return Vector2Angle((Vector2){.x = 1, .y = 0},
-                      (Vector2){.x = deltaX, .y = deltaY});
-}
-
-double ClampDouble(double d, double min, double max)
-{
-  const double t = d < min ? min : d;
-  return t > max ? max : t;
-}
-
-config_t LoadConfig(bool *err, const char *config_name)
-{
-  config_t cfg;
-  config_init(&cfg);
-  if (!config_read_file(&cfg, config_name))
-  {
-    fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
-            config_error_line(&cfg), config_error_text(&cfg));
-    config_destroy(&cfg);
-    *err = true;
-  }
-  else
-  {
-    *err = false;
-  }
-  return cfg;
-}
-
-te_expr *GetConfigExpr(config_t *cfg, char *expr_name, te_variable *vars)
-{
-  const char *string_expr;
-  int err = 0;
-  if (config_lookup_string(cfg, expr_name, &string_expr))
-  {
-    return te_compile(string_expr, vars, 1, &err);
-  }
-  return 0;
-}
-
-double ReadParameterFromSetting(config_setting_t *setting, char *exprName)
-{
-  const char *string_expr;
-  int err = 0;
-  if (config_setting_lookup_string(setting, exprName, &string_expr))
-  {
-    return te_interp(string_expr, &err);
-  }
-  else
-  {
-    return PARAMETER_NOT_SET;
+void UpdateTimeAndPlace(TimeAndPlace *tap) {
+  tap->mousePosition = GetMousePosition();
+  tap->mouseDelta = GetMouseDelta();
+  tap->time = GetTime();
+  tap->deltaTime = GetFrameTime();
+  tap->angle = ComputeAngleV(tap->mouseDelta);
+  if (tap->deltaTime > 0) {
+    tap->speed = ComputeSpeedV(tap->mouseDelta, tap->deltaTime);
   }
 }
 
-void SetExpr16ParameterOfSignal(config_t *cfg, uint16_t *parameter, double l,
-                                char *exprName, double mask)
+typedef struct AppState
 {
-  double my_l = l;
-  te_variable vars[] = {{"l", &my_l}};
-  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
-  if ((void *)expr != 0)
-  {
-    *parameter = (uint16_t)ClampDouble(te_eval(expr), 0, mask);
-  }
+  TimeAndPlace timeAndPlace;
+  RodGroup *rodGroup;
+  SelectionState selectionState;
+  CollisionState collisionState;
+  SignalState signalState;
+} AppState;
+
+AppState InitAppState(config_t cfg, const char *specName)
+{
+  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg)};
 }
 
-void SetExpr8ParameterOfSignal(config_t *cfg, uint8_t *parameter, double l,
-                               char *exprName, double mask)
+void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
 {
-  double my_l = l;
-  te_variable vars[] = {{"l", &my_l}};
-  te_expr *expr = GetConfigExpr(cfg, exprName, vars);
-  if ((void *)expr != 0)
+  for (int i = 0; i < rodGroup->nbRods; i++)
   {
-    *parameter = (uint8_t)ClampDouble(te_eval(expr), 0, mask);
-  }
-}
-
-void SetSignalKind(config_t *cfg, SignalType *signalKind)
-{
-  const char *signalName;
-  if (config_lookup_string(cfg, "signal_type", &signalName))
-  {
-    if (strcmp(signalName, "sine") == 0)
+    Rod *rod = &(rodGroup->rods[i]);
+    // If a rod is under the mouse, mark it as selected.
+    if (CheckCollisionPointRec(mousePosition, rod->rect))
     {
-      *signalKind = SINE;
-    }
-    else if (strcmp(signalName, "steady") == 0)
-    {
-      *signalKind = STEADY;
-    }
-    else if (strcmp(signalName, "triangle") == 0)
-    {
-      *signalKind = TRIANGLE;
-    }
-    else if (strcmp(signalName, "front teeth") == 0)
-    {
-      *signalKind = FRONT_TEETH;
-    }
-    else if (strcmp(signalName, "back teeth") == 0)
-    {
-      *signalKind = BACK_TEETH;
+      s->selectedRod = rod;
+      s->selectionTimer = 0;
+      s->offset = Vector2Subtract(GetTopLeft(*rod), mousePosition);
+      break;
     }
   }
 }
 
-void InitSignals(config_t cfg, Signal signals[])
+void ClearSelection(SelectionState *s)
 {
+  s->selectedRod = NULL;
+  s->selectionTimer = 0;
+}
 
-  char *signal_parameter_name = "signal_type";
-  SignalType signal = SINE;
-  SetSignalKind(&cfg, &signal);
-
-  int i;
-  for (i = 0; i < 10; i++)
+void UpdateSelectionTimer(SelectionState *s)
+{
+  if (s->selectedRod != NULL)
   {
-    signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
-    SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
-        "period_expr", 0xFFFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_expr", 0xFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
-        "duty_expr", 0xFF);
-    SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, offset)), i,
-        "offset_expr", 0xFF);
+    s->selectionTimer += 1;
+  }
+}
+
+void UpdateCollisionState(CollisionState *cs) {
+  if (cs->collided) {
+    cs->collisionTimer += 1;
+  } else {
+    cs->collisionTimer = 0;
+  }
+  cs->collidedPreviously = cs->collided;
+  cs->collided = false;
+}
+
+typedef struct Corner {
+  Vector2 coords;
+  float dist;
+} Corner;
+
+int compareCorners(const void* a, const void *b) {
+  Corner corner_a = *( (Corner*) a);
+  Corner corner_b = *( (Corner*) b);
+
+  if (corner_a.dist < corner_b.dist) return 1;
+  else if (corner_a.dist > corner_b.dist) return -1;
+  else return 0;
+}
+
+typedef struct Bound {
+  float value;
+  enum StrictCollisionType collisionType;
+} Bound;
+
+Bound newBound(Rod boundingRod, enum StrictCollisionType collisionType) {
+  float value;
+  switch (collisionType) {
+    case FROM_ABOVE:
+      value = GetTop(boundingRod);
+      break;
+    case FROM_BELOW:
+      value = GetBottom(boundingRod);
+      break;
+
+    case FROM_RIGHT:
+      value = GetRight(boundingRod);
+      break;
+
+    case FROM_LEFT:
+      value = GetLeft(boundingRod);
+      break;
+
+    default:
+      fprintf(stderr, "SHOULDN'T HAPPEN!!\n ONLY CALL THIS FUNCTION WHEN THERE IS A COLLISION !\n");
+      abort();
+    }
+    return (Bound){value, collisionType};
+}
+
+
+void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup *rodGroup, TimeAndPlace tap)
+{
+  if (ss->selectedRod == NULL)
+  {
+    return;
   }
 
-  int per_rod = 0;
-  config_lookup_bool(&cfg, "per_rod", &per_rod);
 
-  if (per_rod)
+  Rod targetRod = RodAfterSpeculativeMove(*ss, tap.mousePosition);
+
+  Bound yBounds[22];
+  int nbYBounds = 0;
+
+  yBounds[0] = newBound(*(ss->selectedRod), FROM_RIGHT);
+  Bound xBounds[22];
+  int nbXBounds = 0;
+
+
+  for (int i = 0; i < rodGroup->nbRods; i++)
   {
-    char *rod_names[] = {"r1", "r2", "r3", "r4", "r5",
-                         "r6", "r7", "r8", "r9", "r10"};
-    int i;
-    for (i = 0; i < 10; i++)
+    Rod *otherRod = &rodGroup->rods[i];
+    if (ss->selectedRod != otherRod)
     {
-      config_setting_t *setting = config_lookup(&cfg, rod_names[i]);
+      StrictCollisionType collisionType = CheckStrictCollision(*(ss->selectedRod), targetRod, *otherRod);
+      if (collisionType != NO_STRICT_COLLISION) {
+        RegisterCollision(cs);
 
-      if (setting != NULL)
-      {
+        if (collisionType == FROM_ABOVE || collisionType ==  FROM_BELOW) {
+          yBounds[nbYBounds] = newBound(*otherRod, collisionType);
+          nbYBounds += 1;
+        } else {
 
-        double period = ReadParameterFromSetting(setting, "period");
-        if (period != PARAMETER_NOT_SET)
-        {
-          signals[i].period = ClampDouble(period, 0, 0xFFFF);
-        }
 
-        double amplitude = ReadParameterFromSetting(setting, "amplitude");
-        if (amplitude != PARAMETER_NOT_SET)
-        {
-          signals[i].amplitude = ClampDouble(amplitude, 0, 0xFF);
-        }
-
-        double offset = ReadParameterFromSetting(setting, "offset");
-        if (offset != PARAMETER_NOT_SET)
-        {
-          signals[i].offset = ClampDouble(offset, 0, 0xFF);
-        }
-
-        double duty = ReadParameterFromSetting(setting, "duty");
-        if (duty != PARAMETER_NOT_SET)
-        {
-          signals[i].duty = ClampDouble(duty, 0, 0xFF);
-        }
-        const char *signal_name;
-        int signal = SINE;
-        if (config_setting_lookup_string(setting, signal_parameter_name,
-                                         &signal_name))
-        {
-          if (strcmp(signal_name, "sine") == 0)
-          {
-            signal = SINE;
-          }
-          else if (strcmp(signal_name, "steady") == 0)
-          {
-            signal = STEADY;
-          }
-          else if (strcmp(signal_name, "triangle") == 0)
-          {
-            signal = TRIANGLE;
-          }
-          else if (strcmp(signal_name, "front teeth") == 0)
-          {
-            signal = FRONT_TEETH;
-          }
-          else if (strcmp(signal_name, "back teeth") == 0)
-          {
-            signal = BACK_TEETH;
-          }
-          signals[i].signal_type = signal;
+          xBounds[nbXBounds] = newBound(*otherRod, collisionType);
+          nbXBounds += 1;
         }
       }
     }
   }
 
-  int per_group = 0;
-  config_lookup_bool(&cfg, "per_group", &per_group);
-  if (per_group)
-  {
-    char *groups[] = {"g1-7", "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
-                      "g3-6-9", "g1-7", "g2-4-8", "g3-6-9", "g5-10"};
-    int i;
-    for (i = 0; i < 10; i++)
-    {
-      config_setting_t *setting = config_lookup(&cfg, groups[i]);
 
-      if (setting != NULL)
-      {
+  if (!cs->collided){
+    *ss->selectedRod = targetRod;
+    return;
+  }
 
-        double period = ReadParameterFromSetting(setting, "period");
-        if (period != PARAMETER_NOT_SET)
-        {
-          signals[i].period = ClampDouble(period, 0, 0xFFFF);
+  yBounds[nbYBounds] = (Bound){value: GetBottom(targetRod), FROM_ABOVE};
+  nbYBounds += 1;
+
+  xBounds[nbXBounds] = (Bound){value: GetRight(targetRod), FROM_LEFT};
+  nbXBounds += 1;
+
+  yBounds[nbYBounds] = (Bound){value: GetBottom(*(ss->selectedRod)), FROM_ABOVE};
+  nbYBounds += 1;
+
+  xBounds[nbXBounds] = (Bound){value: GetRight(*(ss->selectedRod)), FROM_LEFT};
+  nbXBounds += 1;
+
+  Rod candidateRod = *(ss->selectedRod);
+  Rod bestRod = *(ss->selectedRod);
+  float bestDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
+  for (int ix = 0; ix < nbXBounds; ix++) {
+    for (int iy = 0; iy < nbYBounds; iy++) {
+      if (yBounds[iy].collisionType == FROM_ABOVE) {
+        SetBottom(&candidateRod, yBounds[iy].value);
+      } else {
+        SetTop(&candidateRod, yBounds[iy].value);
+      }
+      
+      if (xBounds[ix].collisionType == FROM_LEFT) {
+        SetRight(&candidateRod, xBounds[ix].value);
+      } else {
+        SetLeft(&candidateRod, xBounds[ix].value);
+      }
+
+      float candidateDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
+
+      if (candidateDist < bestDist) {
+        bool noCollision = true;
+        for (int i = 0; i < rodGroup->nbRods; i++) {
+          if (&rodGroup->rods[i] != ss->selectedRod && StrictlyCollide(rodGroup->rods[i], candidateRod)) {
+            noCollision = false;
+            break;
+          }
         }
-
-        double amplitude = ReadParameterFromSetting(setting, "amplitude");
-        if (amplitude != PARAMETER_NOT_SET)
-        {
-          signals[i].amplitude = ClampDouble(amplitude, 0, 0xFF);
-        }
-
-        double offset = ReadParameterFromSetting(setting, "offset");
-        if (offset != PARAMETER_NOT_SET)
-        {
-          signals[i].offset = ClampDouble(offset, 0, 0xFF);
-        }
-
-        double duty = ReadParameterFromSetting(setting, "duty");
-        if (duty != PARAMETER_NOT_SET)
-        {
-          signals[i].duty = ClampDouble(duty, 0, 0xFF);
-        }
-        const char *signal_name;
-        int signal = SINE;
-        if (config_setting_lookup_string(setting, signal_parameter_name,
-                                         &signal_name))
-        {
-          if (strcmp(signal_name, "sine") == 0)
-          {
-            signal = SINE;
-          }
-          else if (strcmp(signal_name, "steady") == 0)
-          {
-            signal = STEADY;
-          }
-          else if (strcmp(signal_name, "triangle") == 0)
-          {
-            signal = TRIANGLE;
-          }
-          else if (strcmp(signal_name, "front teeth") == 0)
-          {
-            signal = FRONT_TEETH;
-          }
-          else if (strcmp(signal_name, "back teeth") == 0)
-          {
-            signal = BACK_TEETH;
-          }
-          signals[i].signal_type = signal;
+        if (noCollision) {
+          bestDist = candidateDist;
+          bestRod = candidateRod;
         }
       }
+
     }
   }
+  SetTopLeft(ss->selectedRod, GetTopLeft(bestRod));
 }
 
-void SaveRods(Rod rods[], int nb_rods, FILE *file)
+
+
+void UpdateAppState(AppState *s)
 {
-  int i;
-  fprintf(file, "%d ", nb_rods);
-  for (i = 0; i < nb_rods; i++)
+  UpdateTimeAndPlace(&s->timeAndPlace);
+
+  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
   {
-    fprintf(file, "%d %f %f ", rods[i].length, rods[i].rect.x, rods[i].rect.y);
+    SelectRodUnderMouse(&s->selectionState, s->rodGroup, s->timeAndPlace.mousePosition);
   }
+  else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+  {
+    ClearSelection(&s->selectionState);
+    ClearCollisionState(&s->collisionState);
+    ClearSignal(&s->signalState);
+  }
+  else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+  {
+    UpdateSelectedRodPosition2(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace);
+  }
+
+  UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
+  UpdateCollisionState(&s->collisionState);
+  UpdateSelectionTimer(&s->selectionState);
 }
 
-// Deprecated, use CreateRodGroupFromSpec instead
-void LoadRods(FILE *file, Rod rods[])
-{
-  int i;
-  int nb_rods;
-  fscanf(file, "%d ", &nb_rods);
-  for (i = 0; i < nb_rods; i++)
-  {
-    Rod rod;
-    int l;
-    float x;
-    float y;
-    fscanf(file, "%d %f %f ", &l, &x, &y);
-    rod.rect.x = x;
-    rod.rect.y = y;
-    rod.rect.width = UNIT_ROD_WIDTH * l;
-    rod.rect.height = ROD_HEIGHT;
-    rod.color = COLORS[l - 1];
-    rods[i] = rod;
-  }
+void ClearAppState(AppState *s) {
+  ClearCollisionState(&s->collisionState);
+  ClearSelection(&s->selectionState);
+  ClearSignal(&s->signalState);
 }
 
-RodGroup *CreateRodGroupFromSpec(const char *spec_name)
-{
-  int i;
-  int nb_rods;
-  FILE *f;
-  f = fopen(spec_name, "r");
-  if (f == NULL) {
-    perror("Couldn't open the spec: ");
-  }
-  fscanf(f, "%d ", &nb_rods);
-  RodGroup *rod_group = malloc(sizeof(RodGroup) + nb_rods * sizeof(Rod));
-  rod_group->nb_rods = nb_rods;
-  for (i = 0; i < nb_rods; i++)
+void ChangeAppSpec(AppState *s, char *specName) {
+  ClearAppState(s);
+  free(s->rodGroup);
+  s->rodGroup = NewRodGroup(specName);
+}
+
+void ParseArgs(int argc, char **argv, char **configName, char **specName) {
+  int c;
+  while ((c = getopt(argc, argv, "c:s:")) != -1)
   {
-    int l;
-    float x;
-    float y;
-    fscanf(f, "%d %f %f ", &l, &x, &y);
-    rod_group->rods[i] = CreateRod(l, x, y);
+    switch (c)
+    {
+    case 'c':
+      *configName = optarg;
+      break;
+    case 's':
+      *specName = optarg;
+      break;
+    case '?':
+      if (optopt == 'c' || optopt == 's')
+      {
+        fprintf(stderr, "L'option -%c nécessite un argument.\n", optopt);
+      }
+      else if (isprint(optopt))
+      {
+        fprintf(stderr, "L'option -%c est inconnue.\n", optopt);
+      }
+      else
+      {
+        fprintf(stderr, "Caractère inconnu : '\\x%x'.\n", optopt);
+      }
+      abort();
+      break;
+    default:
+      abort();
+    }
   }
-  fclose(f);
-  return rod_group;
 }
 
 int main(int argc, char **argv)
 {
 
-  // Establish connection to haptic controller
-  int fd;
-  fd = connect_to_tty();
+  SetTraceLogLevel(LOG_ERROR);
 
-  // The haptic signal won't play if no direction is set.
-  set_direction(fd, 0, 10); // The value was chosen arbitrarily.
-
+  // Parse command line arguments -->
+  char *configName = (char *)DEFAULT_CONFIG;
+  char *specName = (char *)DEFAULT_SPEC;
+  ParseArgs(argc, argv, &configName, &specName);
 
   // Load config -->
-  const char *config_name;
-  if (argc > 1)
-  {
-    config_name = argv[1];
-  }
-  else
-  {
-    config_name = DEFAULT_CONFIG;
-  }
   bool config_error = false;
-  config_t cfg = LoadConfig(&config_error, config_name);
+  config_t cfg = LoadConfig(&config_error, configName);
+  printf("CONFIG : %s\n", configName);
   if (config_error)
   {
     return (EXIT_FAILURE);
   }
-  // <-- Load config
 
-  // Create rods -->
-  const char *spec_name;
-  if (argc > 2)
-  {
-    spec_name = argv[2];
-  }
-  else
-  {
-    spec_name = DEFAULT_SPEC;
-  }
+  AppState appState = InitAppState(cfg, specName);
 
-  RodGroup *rod_group = CreateRodGroupFromSpec(spec_name);
-  Rod *rods = rod_group->rods;
-  int nb_rods = rod_group->nb_rods;
-  // <-- Create rods
+  InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
+#ifdef FULLSCREEN
+  ToggleFullscreen();
+#endif
 
-  Signal signals[NB_RODS_MENU];
-  InitSignals(cfg, signals);
-
-
-  float time;
-  time = GetTime();
-
-  bool newlyCollided = true;
-  bool collided = false;
-  bool originalSignal = true;
-  int selected = -1;
-  
-  int pointerOffsetX = 0; // Offset between pointer and selected rod 
-  int pointerOffsetY = 0;
-
-  int collision_frame_count = 0;
-  int signalMustPlayFrameCount = 0;
-
-
-  InitWindow(TABLET_WIDTH, TABLED_HEIGHT, "HapticRods");
-  
-  
-  //int display = GetCurrentMonitor();
-  //printf("\n MonitorWidth: %d, MonitorHeight: %d", GetMonitorWidth(display), GetMonitorHeight(display));
-  //InitWindow(300, 300, "HapticRods");
-  
-  #ifdef FULLSCREEN
-    ToggleFullscreen();
-  #endif
   SetTargetFPS(40);
 
   // Main loop
@@ -606,185 +525,8 @@ int main(int argc, char **argv)
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    Vector2 mousePosition = GetMousePosition();
-
-    collided = false;
-
-    // Selection logic -->
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    {
-
-      /* Right after selecting a rod, there is a short period during
-      which its signal is guaranteed to play, even if there is a collision.*/
-      signalMustPlayFrameCount = 3;
-
-      // For each rod, check if it's under the mouse.
-      int i;
-      for (i = 0; i < nb_rods; i++)
-      {
-
-        // If a rod is under the mouse, mark it as selected.
-        if (CheckCollisionPointRec(mousePosition, rods[i].rect))
-        {
-          selected = i;
-
-          // Record the distance between the rod's origin and the mouse pointer.
-          // As long as the rod is selected, this distance will be kept constant
-          // on the axes along which the rod is free to move.
-          pointerOffsetX = rods[i].rect.x - mousePosition.x;
-          pointerOffsetY = rods[i].rect.y - mousePosition.y;
-
-          set_signal(fd, -1, -1, signals[rods[i].length - 1]);
-          break;
-        }
-      }
-    }
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-    {
-      selected = -1;
-      clear_signal(fd);
-      collision_frame_count = 0;
-    }
-    // <-- Selection logic
-
-    // Movement logic ->>
-
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && selected >= 0)
-    {
-
-      // Record the pointer's displacement to compute its speed.
-      // Its speed is then used to compute the signal.
-      float dx = mousePosition.x + pointerOffsetX - rods[selected].rect.x;
-      float dy = mousePosition.y + pointerOffsetY - rods[selected].rect.y;
-
-      // Record the current position of the selected rectangle,
-      // so that it may be used to undo the move in case of an accidental merging.
-      float oldX = rods[selected].rect.x;
-      float oldY = rods[selected].rect.y;
-
-      // TODO: cleanup: rename rect1 (selectedRect ?), and test if we can use it everywhere
-      // instead of the verbose rods[selected].rect.
-      // Furthermore, see if we can do the same with the rod itself, 
-      // something like selectedRod = rods[selected].
-      Rectangle rect1 = rods[selected].rect;
-
-      // Move the selected rod so that it sticks to the pointer.
-      rods[selected].rect.x = mousePosition.x + pointerOffsetX;
-      rods[selected].rect.y = mousePosition.y + pointerOffsetY;
-
-      // For each rod, check if it is colliding with the selected rod.
-      int i;
-      for (i = 0; i < nb_rods; i++)
-      {
-
-        Rectangle rect2 = rods[i].rect;
-
-        if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
-            i != selected)
-        {
-
-          collided = true;
-
-          if (IsCollisionOnHorizontalAxis(rect1, rect2) ||
-              IsCollisionOnHorizontalAxis(rect2, rect1))
-          {
-
-
-            if (rect1.y <= rect2.y) // The selected rod is colliding from above.
-            {
-              rods[selected].rect.y = rect2.y - ROD_HEIGHT;
-            }
-            else // The selected rod is colliding from below.
-            {
-              rods[selected].rect.y = rect2.y + ROD_HEIGHT;
-            }
-          }
-          else
-          {
-            if (rect1.x <= rect2.x) { // The selected rod is colliding from the left.
-              rods[selected].rect.x = rect2.x - rect1.width;
-            }
-            else // The selected rod is colliding from the right.
-            {
-              rods[selected].rect.x = rect2.x + rect2.width;
-            }
-          }
-        }
-
-        // Decrement the counter that prevents the signal from being played, even in the case of a collision.
-        if (signalMustPlayFrameCount > 0) 
-        {
-          signalMustPlayFrameCount -= 1;
-        }
-
-        // If a new collision has just occurred, 
-        else if (collision_frame_count == 0 && newlyCollided && collided)
-        {
-          // TODO: sig should be defined back when the rod is selected.
-          Signal sig = signals[rods[selected].length - 1];
-
-          collision_frame_count = 2;
-          sig.offset = 255;
-          set_signal(fd, -1, -1, sig);
-        }
-      }
-
-      if (collided)
-      {
-        // Check that we didn't merge two rods by accident.
-        for (i = 0; i < nb_rods; i++)
-        {
-
-          if (CheckCollisionRecs(rods[selected].rect, rods[i].rect) &&
-              i != selected)
-          {
-            rods[selected].rect.x = oldX;
-            rods[selected].rect.y = oldY;
-          }
-        }
-      }
-
-      newlyCollided = !collided;
-
-      if (collision_frame_count > 0)
-      {
-        collision_frame_count -= 1;
-        if (collision_frame_count == 0)
-        {
-          originalSignal = false;
-          clear_signal(fd);
-        }
-      }
-      else if (!collided && !originalSignal)
-      {
-        originalSignal = true;
-
-        // TODO: clean this up. There should be a helper function,
-        //  something like playSelectionSignal?
-        set_signal(fd, -1, -1, signals[rods[selected].length - 1]);
-      }
-      set_direction(fd, 0, ComputeSpeed(dx, dy, &time)); // FIXME
-    }
-    // <-- Movement logic
-
-    // Save logic -->
-    if (IsKeyPressed(KEY_S))
-    {
-      FILE *f;
-      f = fopen("latest.rods", "w");
-      if (f == NULL)
-      {
-        // Error, as expected.
-        perror("Error opening file");
-        exit(-1);
-      }
-      SaveRods(rods, nb_rods, f);
-      fclose(f);
-    }
-    // <-- Save logic
-
-    // Draw rods
-    DrawRods(rods, nb_rods);
+    UpdateAppState(&appState);
+    DrawRodGroup(appState.rodGroup);
     DrawFPS(0, 0);
 
     EndDrawing();
