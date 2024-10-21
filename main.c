@@ -327,6 +327,18 @@ void UpdateAppState(AppState *s)
   UpdateSelectionTimer(&s->selectionState);
 }
 
+void ClearAppState(AppState *s) {
+  ClearCollisionState(&s->collisionState);
+  ClearSelection(&s->selectionState);
+  ClearSignal(&s->signalState);
+}
+
+void ChangeAppSpec(AppState *s, char *specName) {
+  ClearAppState(s);
+  free(s->rodGroup);
+  s->rodGroup = NewRodGroup(specName);
+}
+
 void DrawRod(Rod rod)
 {
   DrawRectangleRec(rod.rect, GetRodColor(rod));
