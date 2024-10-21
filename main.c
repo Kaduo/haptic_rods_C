@@ -201,7 +201,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
         PlayImpulse(sigs);
       }
     }
-    set_direction(sigs->fd, tap.angle, tap.speed);
+    set_direction(sigs->fd, 12, tap.speed);
   }
 }
 
