@@ -133,7 +133,6 @@ Signal *InitSignals(config_t cfg)
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
         i, "amplitude_expr", 0xFF);
-    printf("HIHIHI : %d\n", signals[i].amplitude);
     SetExpr8ParameterOfSignal(
         &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
         "duty_expr", 0xFF);
@@ -209,8 +208,6 @@ Signal *InitSignals(config_t cfg)
         }
       }
     }
-  } else {
-    printf("HOLA\n");
   }
 
   int per_group = 0;
