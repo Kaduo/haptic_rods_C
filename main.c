@@ -22,7 +22,7 @@ const int TABLET_LENGTH = 1000;
 const int TABLED_HEIGHT = 600;
 
 static const char DEFAULT_CONFIG[] = "config.cfg";
-static const char DEFAULT_SPEC[] = "spec.rods";
+static const char DEFAULT_SPEC[] = "problem_set/problem0.rods";
 
 
 const int SIGNAL_MUST_PLAY_PERIOD = 0;
@@ -231,11 +231,12 @@ typedef struct AppState
   SelectionState selectionState;
   CollisionState collisionState;
   SignalState signalState;
+  int problemId;
 } AppState;
 
 AppState InitAppState(config_t cfg, const char *specName)
 {
-  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg)};
+  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId: 0};
 }
 
 void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
@@ -413,10 +414,22 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
           bestRod = candidateRod;
         }
       }
-
     }
   }
   SetTopLeft(ss->selectedRod, GetTopLeft(bestRod));
+}
+
+
+void ClearAppState(AppState *s) {
+  ClearCollisionState(&s->collisionState);
+  ClearSelection(&s->selectionState);
+  ClearSignal(&s->signalState);
+}
+
+void ChangeAppSpec(AppState *s, char *specName) {
+  ClearAppState(s);
+  free(s->rodGroup);
+  s->rodGroup = NewRodGroup(specName);
 }
 
 
@@ -443,20 +456,15 @@ void UpdateAppState(AppState *s)
   UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
   UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
-}
 
-void ClearAppState(AppState *s) {
-  ClearCollisionState(&s->collisionState);
-  ClearSelection(&s->selectionState);
-  ClearSignal(&s->signalState);
+  if (IsKeyPressed(KEY_N)) {
+    ClearAppState(s);
+    char specName[50];
+    s-> problemId += 1;
+    snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
+    ChangeAppSpec(s, specName);
+  }
 }
-
-void ChangeAppSpec(AppState *s, char *specName) {
-  ClearAppState(s);
-  free(s->rodGroup);
-  s->rodGroup = NewRodGroup(specName);
-}
-
 void ParseArgs(int argc, char **argv, char **configName, char **specName) {
   int c;
   while ((c = getopt(argc, argv, "c:s:")) != -1)
