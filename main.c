@@ -187,7 +187,7 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
     }
     return;
   }
-  else if (!cols.collided && sigs->signalPlaying == NO_SIGNAL) {
+  else if (!cols.collided && sigs->signalPlaying != SELECTED_ROD_SIGNAL) {
     SetSelectedRodSignal(sigs, secs, tap);
   }
   else if (cols.collided) {
