@@ -273,21 +273,6 @@ void onmessage(ws_cli_conn_t client,
 		msg, size, type, cli);
 #endif
 
-	/**
-	 * Mimicks the same frame type received and re-send it again
-	 *
-	 * Please note that we could just use a ws_sendframe_txt()
-	 * or ws_sendframe_bin() here, but we're just being safe
-	 * and re-sending the very same frame type and content
-	 * again.
-	 *
-	 * Alternative functions:
-	 *   ws_sendframe()
-	 *   ws_sendframe_txt()
-	 *   ws_sendframe_txt_bcast()
-	 *   ws_sendframe_bin()
-	 *   ws_sendframe_bin_bcast()
-	 */
 	ws_sendframe_txt(client, "YES");
 }
 
