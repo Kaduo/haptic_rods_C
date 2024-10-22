@@ -596,6 +596,8 @@ int main(int argc, char **argv)
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
+  DisableCursor();
+
 #ifdef FULLSCREEN
   ToggleFullscreen();
 #endif
