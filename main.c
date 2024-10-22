@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <ws.h>
 
 #define NB_RODS_MENU 10
 
@@ -90,6 +91,27 @@ CollisionState InitCollisionState() {
   return (CollisionState){collisionTimer: 0, collided: false, collidedPreviously: false};
 }
 
+// WEBSOCKET
+
+
+void onopen(ws_cli_conn_t client)
+{
+	char *cli, *port;
+	cli  = ws_getaddress(client);
+	port = ws_getport(client);
+#ifndef DISABLE_VERBOSE
+	printf("Connection opened, addr: %s, port: %s\n", cli, port);
+#endif
+}
+
+void onclose(ws_cli_conn_t client)
+{
+	char *cli;
+	cli = ws_getaddress(client);
+#ifndef DISABLE_VERBOSE
+	printf("Connection closed, addr: %s\n", cli);
+#endif
+}
 
 void UpdateCollisionTimer(CollisionState *s) {
   if (s->collidedPreviously) {
@@ -232,11 +254,46 @@ typedef struct AppState
   CollisionState collisionState;
   SignalState signalState;
   int problemId;
+  bool next;
 } AppState;
+
+static AppState appState;
+
+
+void onmessage(ws_cli_conn_t client,
+	const unsigned char *msg, uint64_t size, int type)
+{
+	char *cli;
+	cli = ws_getaddress(client);
+  if (msg[0] == 'n') {
+    appState.next = true;
+  }
+#ifndef DISABLE_VERBOSE
+	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
+		msg, size, type, cli);
+#endif
+
+	/**
+	 * Mimicks the same frame type received and re-send it again
+	 *
+	 * Please note that we could just use a ws_sendframe_txt()
+	 * or ws_sendframe_bin() here, but we're just being safe
+	 * and re-sending the very same frame type and content
+	 * again.
+	 *
+	 * Alternative functions:
+	 *   ws_sendframe()
+	 *   ws_sendframe_txt()
+	 *   ws_sendframe_txt_bcast()
+	 *   ws_sendframe_bin()
+	 *   ws_sendframe_bin_bcast()
+	 */
+	ws_sendframe_txt(client, "YES");
+}
 
 AppState InitAppState(config_t cfg, const char *specName)
 {
-  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId: 0};
+  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId: 0, next:false};
 }
 
 void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
@@ -424,6 +481,7 @@ void ClearAppState(AppState *s) {
   ClearCollisionState(&s->collisionState);
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
+  s->next = false;
 }
 
 void ChangeAppSpec(AppState *s, char *specName) {
@@ -457,7 +515,7 @@ void UpdateAppState(AppState *s)
   UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
 
-  if (IsKeyPressed(KEY_N)) {
+  if (IsKeyPressed(KEY_N) || s->next) {
     ClearAppState(s);
     char specName[50];
     s-> problemId += 1;
@@ -501,6 +559,23 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName) {
 int main(int argc, char **argv)
 {
 
+
+  	ws_socket(&(struct ws_server){
+		/*
+		 * Bind host:
+		 * localhost -> localhost/127.0.0.1
+		 * 0.0.0.0   -> global IPv4
+		 * ::        -> global IPv4+IPv6 (DualStack)
+		 */
+		.host = "192.168.1.9",
+		.port = 8080,
+		.thread_loop   = 1,
+		.timeout_ms    = 1000,
+		.evs.onopen    = &onopen,
+		.evs.onclose   = &onclose,
+		.evs.onmessage = &onmessage
+	});
+
   SetTraceLogLevel(LOG_ERROR);
 
   // Parse command line arguments -->
@@ -517,7 +592,7 @@ int main(int argc, char **argv)
     return (EXIT_FAILURE);
   }
 
-  AppState appState = InitAppState(cfg, specName);
+  appState = InitAppState(cfg, specName);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
