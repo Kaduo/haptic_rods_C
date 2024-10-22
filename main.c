@@ -652,10 +652,10 @@ void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
   abort();
 }
 
-void UpdateAppState(AppState *s, FILE *save)
+void UpdateAppState(AppState *s, FILE *tapReplay)
 {
-  if (save != NULL) {
-    UpdateTapFromSave(&s->timeAndPlace, save);
+  if (tapReplay != NULL) {
+    UpdateTapFromSave(&s->timeAndPlace, tapReplay);
   } else {
     UpdateTimeAndPlace(&s->timeAndPlace);
   }
@@ -679,7 +679,7 @@ void UpdateAppState(AppState *s, FILE *save)
     somethingGoingOn = false;
   }
 
-  if (somethingGoingOn) {
+  if (somethingGoingOn && tapReplay == NULL) {
     SaveTap(s);
   }
   
