@@ -16,8 +16,14 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <ws.h>
+#include <sys/stat.h>
+#include <pthread.h>
 
 #define NB_RODS_MENU 10
+
+const int NB_PROBLEMS = 10;
+
+const int FPS = 40;
 
 const int TABLET_LENGTH = 1000;
 const int TABLED_HEIGHT = 600;
@@ -150,6 +156,9 @@ typedef struct TimeAndPlace
   Vector2 mouseDelta;
   float time;
   float deltaTime;
+  bool MouseButtonPressed;
+  bool MouseButtonReleased;
+  bool MouseButtonDown;
   uint16_t speed;
   uint8_t angle;
 } TimeAndPlace;
@@ -258,10 +267,6 @@ void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState co
   }
 }
 
-TimeAndPlace InitTimeAndPlace()
-{
-  return (TimeAndPlace){GetMousePosition(), GetMouseDelta(), GetTime(), GetFrameTime(), 0, 0};
-}
 
 void UpdateTimeAndPlace(TimeAndPlace *tap)
 {
@@ -274,7 +279,18 @@ void UpdateTimeAndPlace(TimeAndPlace *tap)
   {
     tap->speed = ComputeSpeedV(tap->mouseDelta, tap->deltaTime);
   }
+  tap->MouseButtonDown = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+  tap->MouseButtonPressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+  tap->MouseButtonReleased = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
+
+TimeAndPlace InitTimeAndPlace()
+{
+  TimeAndPlace tap;
+  UpdateTimeAndPlace(&tap);
+  return tap;
+}
+
 
 typedef struct AppState
 {
@@ -285,6 +301,9 @@ typedef struct AppState
   SignalState signalState;
   int problemId;
   bool next;
+  int userId;
+  bool newUser;
+  FILE *currentSave;
 } AppState;
 
 static AppState appState;
@@ -304,6 +323,9 @@ void onmessage(ws_cli_conn_t client,
     appState.next = true;
     appState.problemId = strtol(&(msg[1]), NULL, 10);
     break;
+  case 'u':
+    appState.newUser = true;
+    appState.userId = strtol(&(msg[1]), NULL, 10);
   default:
     break;
   }
@@ -315,9 +337,42 @@ void onmessage(ws_cli_conn_t client,
   // 	ws_sendframe_txt(client, "YES");
 }
 
-AppState InitAppState(config_t cfg, const char *specName)
+void LoadAppSpec(AppState *s, char *specName)
 {
-  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId : 0, next : false};
+  free(s->rodGroup);
+  s->rodGroup = NewRodGroup(specName);
+}
+
+void CreateUserFolder(AppState *s)
+{
+  char folderName[50];
+  snprintf(folderName, 50, "user%d", s->userId);
+  mkdir(folderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+}
+
+void StartProblem(AppState *s)
+{
+  char specName[50];
+  snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
+  LoadAppSpec(s, specName);
+}
+
+void OpenSaveFile(AppState *s)
+{
+  char saveName[50];
+  snprintf(saveName, 50, "user%d/save%d.tap", s->userId, s->problemId);
+  free(s->currentSave);
+  s->currentSave = fopen(saveName, "w");
+  fprintf(s->currentSave, "r %f \n", s->timeAndPlace.time);
+}
+
+AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId)
+{
+  AppState res = (AppState){InitTimeAndPlace(), rodGroup : NULL, InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId : firstProblemId, next : false, userId : firstUserId, newUser : false, currentSave : NULL};
+  CreateUserFolder(&res);
+  OpenSaveFile(&res);
+  StartProblem(&res);
+  return res;
 }
 
 void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
@@ -530,50 +585,134 @@ void ClearAppState(AppState *s)
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
   s->next = false;
+  s->newUser = false;
 }
 
-void ChangeAppSpec(AppState *s, char *specName)
+typedef enum MouseState
 {
-  ClearAppState(s);
-  free(s->rodGroup);
-  s->rodGroup = NewRodGroup(specName);
-}
+  RELEASED,
+  PRESSED,
+  DOWN,
+} MouseState;
 
-void UpdateAppState(AppState *s)
+void SaveTap(AppState *s)
 {
-  UpdateTimeAndPlace(&s->timeAndPlace);
-
-  if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+  if (s->timeAndPlace.MouseButtonReleased)
   {
+    fprintf(s->currentSave, "r %f \n\n", s->timeAndPlace.time);
+  }
+  else
+  {
+    fprintf(s->currentSave,
+            "%f %f %f \n",
+            s->timeAndPlace.time,
+            s->timeAndPlace.mousePosition.x,
+            s->timeAndPlace.mousePosition.y);
+  }
+}
+
+void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
+{
+  static char *line;
+  size_t len = 0;
+  ssize_t read;
+  while ((read = getline(&line, &len, saveFile)) != -1)
+  {
+    if (line[0] != '\n' && line[0] != 'r') {
+      float newTime;
+      float newMouseX;
+      float newMouseY;
+      sscanf(line, "%f %f %f ", &newTime, &newMouseX, &newMouseY);
+      Vector2 newMousePos = (Vector2){newMouseX, newMouseY};
+
+      if (tap->MouseButtonReleased) {
+        tap->MouseButtonPressed = true;
+        tap->MouseButtonReleased = false;
+        WaitTime(newTime - tap->time - 1./FPS);
+      } else {
+        tap->MouseButtonPressed = false;
+        tap->MouseButtonDown = true;
+      }
+      tap->time = newTime;
+      tap->mousePosition = newMousePos;
+      return;
+
+    } else if (line[0] == 'r')
+    {
+      tap->MouseButtonReleased = true;
+      tap->MouseButtonDown = false;
+      tap->MouseButtonPressed = false;
+      float newTime;
+      sscanf(line, "r %f", &newTime);
+      tap->time = newTime;
+      return;
+    }
+  }
+  free(line);
+  abort();
+}
+
+void UpdateAppState(AppState *s, FILE *save)
+{
+  if (save != NULL) {
+    UpdateTapFromSave(&s->timeAndPlace, save);
+  } else {
+    UpdateTimeAndPlace(&s->timeAndPlace);
+  }
+
+  bool somethingGoingOn = true;
+  if (s->timeAndPlace.MouseButtonPressed)
+  {
+    printf("HELLO WORLD\n");
     SelectRodUnderMouse(&s->selectionState, s->rodGroup, s->timeAndPlace.mousePosition);
   }
-  else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+  else if (s->timeAndPlace.MouseButtonReleased)
   {
     ClearSelection(&s->selectionState);
     ClearCollisionState(&s->collisionState);
     ClearSignal(&s->signalState);
   }
-  else if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+  else if (s->timeAndPlace.MouseButtonDown)
   {
     UpdateSelectedRodPosition2(&s->selectionState, &s->collisionState, s->rodGroup, s->timeAndPlace);
+  } else {
+    somethingGoingOn = false;
   }
+
+  if (somethingGoingOn) {
+    SaveTap(s);
+  }
+  
 
   UpdateSignalState(&s->signalState, s->selectionState, s->collisionState, s->timeAndPlace);
   UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
 
+  if (s->problemId > NB_PROBLEMS)
+  {
+    fclose(s->currentSave);
+    return;
+  }
+
   if (IsKeyPressed(KEY_N) || s->next)
   {
     ClearAppState(s);
-    char specName[50];
-    snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
-    ChangeAppSpec(s, specName);
+    StartProblem(s);
+    OpenSaveFile(s);
+  }
+
+  if (IsKeyPressed(KEY_U) || s->newUser)
+  {
+    ClearAppState(s);
+    CreateUserFolder(s);
+    StartProblem(s);
+    OpenSaveFile(s);
   }
 }
-void ParseArgs(int argc, char **argv, char **configName, char **specName)
+void ParseArgs(int argc, char **argv, char **configName, char **specName, char **replayName)
 {
   int c;
-  while ((c = getopt(argc, argv, "c:s:")) != -1)
+  while ((c = getopt(argc, argv, "c:s:r:")) != -1)
   {
     switch (c)
     {
@@ -582,6 +721,9 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName)
       break;
     case 's':
       *specName = optarg;
+      break;
+    case 'r':
+      *replayName = optarg;
       break;
     case '?':
       if (optopt == 'c' || optopt == 's')
@@ -608,13 +750,13 @@ int main(int argc, char **argv)
 {
 
   ws_socket(&(struct ws_server){
-      /*
+      /*ma
        * Bind host:
        * localhost -> localhost/127.0.0.1
        * 0.0.0.0   -> global IPv4
        * ::        -> global IPv4+IPv6 (DualStack)
        */
-      .host = "192.168.1.9",
+      .host = "localhost",
       .port = 8080,
       .thread_loop = 1,
       .timeout_ms = 1000,
@@ -627,7 +769,8 @@ int main(int argc, char **argv)
   // Parse command line arguments -->
   char *configName = (char *)DEFAULT_CONFIG;
   char *specName = (char *)DEFAULT_SPEC;
-  ParseArgs(argc, argv, &configName, &specName);
+  char *replayName = NULL;
+  ParseArgs(argc, argv, &configName, &specName, &replayName);
 
   // Load config -->
   bool config_error = false;
@@ -638,17 +781,21 @@ int main(int argc, char **argv)
     return (EXIT_FAILURE);
   }
 
-  appState = InitAppState(cfg, specName);
+  appState = InitAppState(cfg, 0, 0);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
-  HideCursor();
-
 #ifdef FULLSCREEN
+  HideCursor();
   ToggleFullscreen();
 #endif
 
-  SetTargetFPS(40);
+  SetTargetFPS(FPS);
+
+  FILE *save = NULL;
+  if (replayName != NULL) {
+    save = fopen(replayName, "r");
+  }
 
   // Main loop
   while (!WindowShouldClose())
@@ -656,13 +803,25 @@ int main(int argc, char **argv)
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    UpdateAppState(&appState);
+
+    UpdateAppState(&appState, save);
     DrawRodGroup(appState.rodGroup);
-    DrawFPS(0, 0);
+
+    if (save != NULL && (appState.timeAndPlace.MouseButtonDown || appState.timeAndPlace.MouseButtonPressed)) {
+      DrawCircle(appState.timeAndPlace.mousePosition.x, 
+          appState.timeAndPlace.mousePosition.y,
+          5,
+          RED);
+    }
+
+    // DrawFPS(0, 0);
 
     EndDrawing();
   } // <-- Main loop
 
+  if (appState.currentSave != NULL) {
+    fclose(appState.currentSave);
+  }
   CloseWindow();
 
   return 0;
