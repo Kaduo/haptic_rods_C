@@ -663,7 +663,6 @@ void UpdateAppState(AppState *s, FILE *tapReplay)
   bool somethingGoingOn = true;
   if (s->timeAndPlace.MouseButtonPressed)
   {
-    printf("HELLO WORLD\n");
     SelectRodUnderMouse(&s->selectionState, s->rodGroup, s->timeAndPlace.mousePosition);
   }
   else if (s->timeAndPlace.MouseButtonReleased)
