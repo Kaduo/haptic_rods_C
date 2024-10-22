@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int UNIT_ROD_LENGTH = 40;
-const int ROD_HEIGHT = 40;
+const int UNIT_ROD_LENGTH = 30;
+const int ROD_HEIGHT = 30;
 
 
 const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
