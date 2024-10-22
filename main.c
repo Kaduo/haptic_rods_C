@@ -567,7 +567,7 @@ int main(int argc, char **argv)
 		 * 0.0.0.0   -> global IPv4
 		 * ::        -> global IPv4+IPv6 (DualStack)
 		 */
-		.host = "localhost",
+		.host = "192.168.1.9",
 		.port = 8080,
 		.thread_loop   = 1,
 		.timeout_ms    = 1000,
