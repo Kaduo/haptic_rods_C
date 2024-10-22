@@ -6,3 +6,4 @@ haptic_rods
 /.vscode/
 *.prob
 *.rods
+*.tap
