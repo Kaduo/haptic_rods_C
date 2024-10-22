@@ -267,7 +267,7 @@ void onmessage(ws_cli_conn_t client,
 	cli = ws_getaddress(client);
   if (msg[0] == 'n') {
     appState.next = true;
-    appSate.problemId = strtol(&(msg[1]), NULL, 10);
+    appState.problemId = strtol(&(msg[1]), NULL, 10);
   }
   // #ifndef DISABLE_VERBOSE
   // 	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
