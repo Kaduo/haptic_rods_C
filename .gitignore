@@ -4,3 +4,5 @@
 raylib_game
 haptic_rods
 /.vscode/
+*.prob
+*.rods
