@@ -25,31 +25,29 @@ const int TABLED_HEIGHT = 600;
 static const char DEFAULT_CONFIG[] = "config.cfg";
 static const char DEFAULT_SPEC[] = "problem_set/problem0.rods";
 
-
 const int SIGNAL_MUST_PLAY_PERIOD = 0;
 const int IMPULSE_DURATION = 2;
 
 const Signal IMPULSE_SIGNAL = (Signal){
-  STEADY,
-  255,
-  255,
-  0,
-  0,
-  0,
+    STEADY,
+    255,
+    255,
+    0,
+    0,
+    0,
 };
 
 int ComputeSpeedV(Vector2 deltaPos, float deltaT)
 {
-  float speedf = abs(Vector2Length(deltaPos) /deltaT);
+  float speedf = abs(Vector2Length(deltaPos) / deltaT);
   int speed = floor(speedf);
   return speed;
 }
 
-int ComputeAngleV(Vector2 deltaPos) {
+int ComputeAngleV(Vector2 deltaPos)
+{
   return Vector2Angle((Vector2){1, 0}, deltaPos);
 }
-
-
 
 void DrawRod(Rod rod)
 {
@@ -65,8 +63,6 @@ void DrawRodGroup(RodGroup rodGroup[])
   }
 }
 
-
-
 typedef struct SelectionState
 {
   Rod *selectedRod;
@@ -76,45 +72,48 @@ typedef struct SelectionState
 
 SelectionState InitSelectionState()
 {
-  return (SelectionState){selectedRod: NULL, selectionTimer: 0, offset: (Vector2){0, 0}};
+  return (SelectionState){selectedRod : NULL, selectionTimer : 0, offset : (Vector2){0, 0}};
 }
 
 #define MAX_ROD_COLLIDING 22
 
-typedef struct CollisionState {
+typedef struct CollisionState
+{
   int collisionTimer;
   bool collided;
   bool collidedPreviously;
 } CollisionState;
 
-CollisionState InitCollisionState() {
-  return (CollisionState){collisionTimer: 0, collided: false, collidedPreviously: false};
+CollisionState InitCollisionState()
+{
+  return (CollisionState){collisionTimer : 0, collided : false, collidedPreviously : false};
 }
 
 // WEBSOCKET
 
-
 void onopen(ws_cli_conn_t client)
 {
-	char *cli, *port;
-	cli  = ws_getaddress(client);
-	port = ws_getport(client);
+  char *cli, *port;
+  cli = ws_getaddress(client);
+  port = ws_getport(client);
 #ifndef DISABLE_VERBOSE
-	printf("Connection opened, addr: %s, port: %s\n", cli, port);
+  printf("Connection opened, addr: %s, port: %s\n", cli, port);
 #endif
 }
 
 void onclose(ws_cli_conn_t client)
 {
-	char *cli;
-	cli = ws_getaddress(client);
+  char *cli;
+  cli = ws_getaddress(client);
 #ifndef DISABLE_VERBOSE
-	printf("Connection closed, addr: %s\n", cli);
+  printf("Connection closed, addr: %s\n", cli);
 #endif
 }
 
-void UpdateCollisionTimer(CollisionState *s) {
-  if (s->collidedPreviously) {
+void UpdateCollisionTimer(CollisionState *s)
+{
+  if (s->collidedPreviously)
+  {
     s->collisionTimer += 1;
   }
 }
@@ -133,18 +132,20 @@ Rod RodAfterSpeculativeMove(SelectionState s, Vector2 mousePosition)
   }
 }
 
-void ClearCollisionState(CollisionState *cs) {
+void ClearCollisionState(CollisionState *cs)
+{
   cs->collided = false;
   cs->collidedPreviously = false;
   cs->collisionTimer = 0;
 }
 
-void RegisterCollision(CollisionState *cs) {
+void RegisterCollision(CollisionState *cs)
+{
   cs->collided = true;
 }
 
-
-typedef struct TimeAndPlace {
+typedef struct TimeAndPlace
+{
   Vector2 mousePosition;
   Vector2 mouseDelta;
   float time;
@@ -153,95 +154,124 @@ typedef struct TimeAndPlace {
   uint8_t angle;
 } TimeAndPlace;
 
+enum SignalPlaying
+{
+  NO_SIGNAL,
+  IMPULSE,
+  SELECTED_ROD_SIGNAL
+};
 
-enum SignalPlaying{NO_SIGNAL, IMPULSE, SELECTED_ROD_SIGNAL};
-
-typedef struct SignalState  {
+typedef struct SignalState
+{
   enum SignalPlaying signalPlaying;
   Signal *signals;
   int fd;
 } SignalState;
 
-SignalState InitSignalState(config_t cfg) {
+SignalState InitSignalState(config_t cfg)
+{
   Signal *signals = InitSignals(cfg);
-  SignalState signalState = (SignalState){signalPlaying: NO_SIGNAL, signals: signals, fd: connect_to_tty()};
-  if (signalState.fd != -1) {
-      // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
+  SignalState signalState = (SignalState){signalPlaying : NO_SIGNAL, signals : signals, fd : connect_to_tty()};
+  if (signalState.fd != -1)
+  {
+    // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.
     set_direction(signalState.fd, 0, 10);
   }
   return signalState;
 }
 
-void ClearSignal(SignalState *sigs) {
+void ClearSignal(SignalState *sigs)
+{
   sigs->signalPlaying = NO_SIGNAL;
-  if (sigs->fd != -1) {
+  if (sigs->fd != -1)
+  {
     clear_signal(sigs->fd);
     play_signal(sigs->fd, 0);
   }
   printf("Now playing : no signal.\n");
 }
 
-Signal GetRodSignal(SignalState sigs, Rod rod) {
-  return sigs.signals[rod.numericLength -1];
+Signal GetRodSignal(SignalState sigs, Rod rod)
+{
+  return sigs.signals[rod.numericLength - 1];
 }
 
-void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace tap) {
+void SetSelectedRodSignal(SignalState *sigs, SelectionState secs, TimeAndPlace tap)
+{
   sigs->signalPlaying = SELECTED_ROD_SIGNAL;
-  if (sigs->fd != -1) {
-      set_signal(sigs->fd, -1, -1, GetRodSignal(*sigs, *secs.selectedRod));
+  if (sigs->fd != -1)
+  {
+    set_signal(sigs->fd, -1, -1, GetRodSignal(*sigs, *secs.selectedRod));
   }
   printf("Now playing : the selected rod signal.\n");
   PrintSignal(GetRodSignal(*sigs, *secs.selectedRod));
 }
 
-void PlayImpulse(SignalState *sigs) {
+void PlayImpulse(SignalState *sigs)
+{
   sigs->signalPlaying = IMPULSE;
-  if (sigs->fd != -1) {
+  if (sigs->fd != -1)
+  {
     set_signal(sigs->fd, -1, -1, IMPULSE_SIGNAL);
   }
   printf("Now playing : the impulse signal.\n");
 }
 
-void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState cols, TimeAndPlace tap) {
-  if (secs.selectedRod == NULL) {
-    if (sigs->signalPlaying != NO_SIGNAL) {
-        ClearSignal(sigs);
+void UpdateSignalState(SignalState *sigs, SelectionState secs, CollisionState cols, TimeAndPlace tap)
+{
+  if (secs.selectedRod == NULL)
+  {
+    if (sigs->signalPlaying != NO_SIGNAL)
+    {
+      ClearSignal(sigs);
     }
     return;
   }
-  else {
-    if (!cols.collided && sigs->signalPlaying != SELECTED_ROD_SIGNAL) {
+  else
+  {
+    if (!cols.collided && sigs->signalPlaying != SELECTED_ROD_SIGNAL)
+    {
       SetSelectedRodSignal(sigs, secs, tap);
     }
-    else if (cols.collided) {
-      if (sigs->signalPlaying == NO_SIGNAL) {
-        if (secs.selectionTimer <= SIGNAL_MUST_PLAY_PERIOD) {
+    else if (cols.collided)
+    {
+      if (sigs->signalPlaying == NO_SIGNAL)
+      {
+        if (secs.selectionTimer <= SIGNAL_MUST_PLAY_PERIOD)
+        {
           SetSelectedRodSignal(sigs, secs, tap);
         }
-      } else if (sigs->signalPlaying == IMPULSE && cols.collisionTimer > SIGNAL_MUST_PLAY_PERIOD + IMPULSE_DURATION) {
-          ClearSignal(sigs);
-      } else if (sigs->signalPlaying == SELECTED_ROD_SIGNAL && secs.selectionTimer > SIGNAL_MUST_PLAY_PERIOD) {
+      }
+      else if (sigs->signalPlaying == IMPULSE && cols.collisionTimer > SIGNAL_MUST_PLAY_PERIOD + IMPULSE_DURATION)
+      {
+        ClearSignal(sigs);
+      }
+      else if (sigs->signalPlaying == SELECTED_ROD_SIGNAL && secs.selectionTimer > SIGNAL_MUST_PLAY_PERIOD)
+      {
         PlayImpulse(sigs);
       }
     }
-    if (sigs-> fd != -1) {
-        set_direction(sigs->fd, tap.angle, tap.speed);
+    if (sigs->fd != -1)
+    {
+      set_direction(sigs->fd, tap.angle, tap.speed);
     }
   }
 }
 
-
-TimeAndPlace InitTimeAndPlace() {
+TimeAndPlace InitTimeAndPlace()
+{
   return (TimeAndPlace){GetMousePosition(), GetMouseDelta(), GetTime(), GetFrameTime(), 0, 0};
 }
 
-void UpdateTimeAndPlace(TimeAndPlace *tap) {
+void UpdateTimeAndPlace(TimeAndPlace *tap)
+{
   tap->mousePosition = GetMousePosition();
   tap->mouseDelta = GetMouseDelta();
   tap->time = GetTime();
   tap->deltaTime = GetFrameTime();
   tap->angle = ComputeAngleV(tap->mouseDelta);
-  if (tap->deltaTime > 0) {
+  if (tap->deltaTime > 0)
+  {
     tap->speed = ComputeSpeedV(tap->mouseDelta, tap->deltaTime);
   }
 }
@@ -259,22 +289,23 @@ typedef struct AppState
 
 static AppState appState;
 
-
 void onmessage(ws_cli_conn_t client,
-	const unsigned char *msg, uint64_t size, int type)
+               const unsigned char *msg, uint64_t size, int type)
 {
-	char *cli;
-	cli = ws_getaddress(client);
-  if (msg[0] == 'n') {
+  char *cli;
+  cli = ws_getaddress(client);
+  if (msg[0] == 'n')
+  {
   }
 
-  switch (msg[0]) {
-    case 'n':
-      appState.next = true;
-      appState.problemId = strtol(&(msg[1]), NULL, 10);
-      break;
-    default:
-      break;
+  switch (msg[0])
+  {
+  case 'n':
+    appState.next = true;
+    appState.problemId = strtol(&(msg[1]), NULL, 10);
+    break;
+  default:
+    break;
   }
   // #ifndef DISABLE_VERBOSE
   // 	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
@@ -286,7 +317,7 @@ void onmessage(ws_cli_conn_t client,
 
 AppState InitAppState(config_t cfg, const char *specName)
 {
-  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId: 0, next:false};
+  return (AppState){InitTimeAndPlace(), NewRodGroup(specName), InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId : 0, next : false};
 }
 
 void SelectRodUnderMouse(SelectionState *s, RodGroup *rodGroup, Vector2 mousePosition)
@@ -319,60 +350,71 @@ void UpdateSelectionTimer(SelectionState *s)
   }
 }
 
-void UpdateCollisionState(CollisionState *cs) {
-  if (cs->collided) {
+void UpdateCollisionState(CollisionState *cs)
+{
+  if (cs->collided)
+  {
     cs->collisionTimer += 1;
-  } else {
+  }
+  else
+  {
     cs->collisionTimer = 0;
   }
   cs->collidedPreviously = cs->collided;
   cs->collided = false;
 }
 
-typedef struct Corner {
+typedef struct Corner
+{
   Vector2 coords;
   float dist;
 } Corner;
 
-int compareCorners(const void* a, const void *b) {
-  Corner corner_a = *( (Corner*) a);
-  Corner corner_b = *( (Corner*) b);
+int compareCorners(const void *a, const void *b)
+{
+  Corner corner_a = *((Corner *)a);
+  Corner corner_b = *((Corner *)b);
 
-  if (corner_a.dist < corner_b.dist) return 1;
-  else if (corner_a.dist > corner_b.dist) return -1;
-  else return 0;
+  if (corner_a.dist < corner_b.dist)
+    return 1;
+  else if (corner_a.dist > corner_b.dist)
+    return -1;
+  else
+    return 0;
 }
 
-typedef struct Bound {
+typedef struct Bound
+{
   float value;
   enum StrictCollisionType collisionType;
 } Bound;
 
-Bound newBound(Rod boundingRod, enum StrictCollisionType collisionType) {
+Bound newBound(Rod boundingRod, enum StrictCollisionType collisionType)
+{
   float value;
-  switch (collisionType) {
-    case FROM_ABOVE:
-      value = GetTop(boundingRod);
-      break;
-    case FROM_BELOW:
-      value = GetBottom(boundingRod);
-      break;
+  switch (collisionType)
+  {
+  case FROM_ABOVE:
+    value = GetTop(boundingRod);
+    break;
+  case FROM_BELOW:
+    value = GetBottom(boundingRod);
+    break;
 
-    case FROM_RIGHT:
-      value = GetRight(boundingRod);
-      break;
+  case FROM_RIGHT:
+    value = GetRight(boundingRod);
+    break;
 
-    case FROM_LEFT:
-      value = GetLeft(boundingRod);
-      break;
+  case FROM_LEFT:
+    value = GetLeft(boundingRod);
+    break;
 
-    default:
-      fprintf(stderr, "SHOULDN'T HAPPEN!!\n ONLY CALL THIS FUNCTION WHEN THERE IS A COLLISION !\n");
-      abort();
-    }
-    return (Bound){value, collisionType};
+  default:
+    fprintf(stderr, "SHOULDN'T HAPPEN!!\n ONLY CALL THIS FUNCTION WHEN THERE IS A COLLISION !\n");
+    abort();
+  }
+  return (Bound){value, collisionType};
 }
-
 
 void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup *rodGroup, TimeAndPlace tap)
 {
@@ -380,7 +422,6 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
   {
     return;
   }
-
 
   Rod targetRod = RodAfterSpeculativeMove(*ss, tap.mousePosition);
 
@@ -391,21 +432,23 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
   Bound xBounds[22];
   int nbXBounds = 0;
 
-
   for (int i = 0; i < rodGroup->nbRods; i++)
   {
     Rod *otherRod = &rodGroup->rods[i];
     if (ss->selectedRod != otherRod)
     {
       StrictCollisionType collisionType = CheckStrictCollision(*(ss->selectedRod), targetRod, *otherRod);
-      if (collisionType != NO_STRICT_COLLISION) {
+      if (collisionType != NO_STRICT_COLLISION)
+      {
         RegisterCollision(cs);
 
-        if (collisionType == FROM_ABOVE || collisionType ==  FROM_BELOW) {
+        if (collisionType == FROM_ABOVE || collisionType == FROM_BELOW)
+        {
           yBounds[nbYBounds] = newBound(*otherRod, collisionType);
           nbYBounds += 1;
-        } else {
-
+        }
+        else
+        {
 
           xBounds[nbXBounds] = newBound(*otherRod, collisionType);
           nbXBounds += 1;
@@ -414,52 +457,64 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
     }
   }
 
-
-  if (!cs->collided){
+  if (!cs->collided)
+  {
     *ss->selectedRod = targetRod;
     return;
   }
 
-  yBounds[nbYBounds] = (Bound){value: GetBottom(targetRod), FROM_ABOVE};
+  yBounds[nbYBounds] = (Bound){value : GetBottom(targetRod), FROM_ABOVE};
   nbYBounds += 1;
 
-  xBounds[nbXBounds] = (Bound){value: GetRight(targetRod), FROM_LEFT};
+  xBounds[nbXBounds] = (Bound){value : GetRight(targetRod), FROM_LEFT};
   nbXBounds += 1;
 
-  yBounds[nbYBounds] = (Bound){value: GetBottom(*(ss->selectedRod)), FROM_ABOVE};
+  yBounds[nbYBounds] = (Bound){value : GetBottom(*(ss->selectedRod)), FROM_ABOVE};
   nbYBounds += 1;
 
-  xBounds[nbXBounds] = (Bound){value: GetRight(*(ss->selectedRod)), FROM_LEFT};
+  xBounds[nbXBounds] = (Bound){value : GetRight(*(ss->selectedRod)), FROM_LEFT};
   nbXBounds += 1;
 
   Rod candidateRod = *(ss->selectedRod);
   Rod bestRod = *(ss->selectedRod);
   float bestDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
-  for (int ix = 0; ix < nbXBounds; ix++) {
-    for (int iy = 0; iy < nbYBounds; iy++) {
-      if (yBounds[iy].collisionType == FROM_ABOVE) {
+  for (int ix = 0; ix < nbXBounds; ix++)
+  {
+    for (int iy = 0; iy < nbYBounds; iy++)
+    {
+      if (yBounds[iy].collisionType == FROM_ABOVE)
+      {
         SetBottom(&candidateRod, yBounds[iy].value);
-      } else {
+      }
+      else
+      {
         SetTop(&candidateRod, yBounds[iy].value);
       }
-      
-      if (xBounds[ix].collisionType == FROM_LEFT) {
+
+      if (xBounds[ix].collisionType == FROM_LEFT)
+      {
         SetRight(&candidateRod, xBounds[ix].value);
-      } else {
+      }
+      else
+      {
         SetLeft(&candidateRod, xBounds[ix].value);
       }
 
       float candidateDist = Vector2DistanceSqr(GetTopLeft(targetRod), GetTopLeft(candidateRod));
 
-      if (candidateDist < bestDist) {
+      if (candidateDist < bestDist)
+      {
         bool noCollision = true;
-        for (int i = 0; i < rodGroup->nbRods; i++) {
-          if (&rodGroup->rods[i] != ss->selectedRod && StrictlyCollide(rodGroup->rods[i], candidateRod)) {
+        for (int i = 0; i < rodGroup->nbRods; i++)
+        {
+          if (&rodGroup->rods[i] != ss->selectedRod && StrictlyCollide(rodGroup->rods[i], candidateRod))
+          {
             noCollision = false;
             break;
           }
         }
-        if (noCollision) {
+        if (noCollision)
+        {
           bestDist = candidateDist;
           bestRod = candidateRod;
         }
@@ -469,21 +524,20 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
   SetTopLeft(ss->selectedRod, GetTopLeft(bestRod));
 }
 
-
-void ClearAppState(AppState *s) {
+void ClearAppState(AppState *s)
+{
   ClearCollisionState(&s->collisionState);
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
   s->next = false;
 }
 
-void ChangeAppSpec(AppState *s, char *specName) {
+void ChangeAppSpec(AppState *s, char *specName)
+{
   ClearAppState(s);
   free(s->rodGroup);
   s->rodGroup = NewRodGroup(specName);
 }
-
-
 
 void UpdateAppState(AppState *s)
 {
@@ -508,14 +562,16 @@ void UpdateAppState(AppState *s)
   UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
 
-  if (IsKeyPressed(KEY_N) || s->next) {
+  if (IsKeyPressed(KEY_N) || s->next)
+  {
     ClearAppState(s);
     char specName[50];
     snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
     ChangeAppSpec(s, specName);
   }
 }
-void ParseArgs(int argc, char **argv, char **configName, char **specName) {
+void ParseArgs(int argc, char **argv, char **configName, char **specName)
+{
   int c;
   while ((c = getopt(argc, argv, "c:s:")) != -1)
   {
@@ -551,22 +607,20 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName) {
 int main(int argc, char **argv)
 {
 
-
-  	ws_socket(&(struct ws_server){
-		/*
-		 * Bind host:
-		 * localhost -> localhost/127.0.0.1
-		 * 0.0.0.0   -> global IPv4
-		 * ::        -> global IPv4+IPv6 (DualStack)
-		 */
-		.host = "192.168.1.9",
-		.port = 8080,
-		.thread_loop   = 1,
-		.timeout_ms    = 1000,
-		.evs.onopen    = &onopen,
-		.evs.onclose   = &onclose,
-		.evs.onmessage = &onmessage
-	});
+  ws_socket(&(struct ws_server){
+      /*
+       * Bind host:
+       * localhost -> localhost/127.0.0.1
+       * 0.0.0.0   -> global IPv4
+       * ::        -> global IPv4+IPv6 (DualStack)
+       */
+      .host = "192.168.1.9",
+      .port = 8080,
+      .thread_loop = 1,
+      .timeout_ms = 1000,
+      .evs.onopen = &onopen,
+      .evs.onclose = &onclose,
+      .evs.onmessage = &onmessage});
 
   SetTraceLogLevel(LOG_ERROR);
 
