@@ -267,13 +267,14 @@ void onmessage(ws_cli_conn_t client,
 	cli = ws_getaddress(client);
   if (msg[0] == 'n') {
     appState.next = true;
+    appSate.problemId = strtol(&(msg[1]), NULL, 10);
   }
-#ifndef DISABLE_VERBOSE
-	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
-		msg, size, type, cli);
-#endif
+  // #ifndef DISABLE_VERBOSE
+  // 	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
+  // 		msg, size, type, cli);
+  // #endif
 
-	ws_sendframe_txt(client, "YES");
+  // 	ws_sendframe_txt(client, "YES");
 }
 
 AppState InitAppState(config_t cfg, const char *specName)
@@ -503,7 +504,6 @@ void UpdateAppState(AppState *s)
   if (IsKeyPressed(KEY_N) || s->next) {
     ClearAppState(s);
     char specName[50];
-    s-> problemId += 1;
     snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
     ChangeAppSpec(s, specName);
   }
