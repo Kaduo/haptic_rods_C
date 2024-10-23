@@ -316,10 +316,6 @@ static AppState appState;
 void onmessage(ws_cli_conn_t client,
                const unsigned char *msg, uint64_t size, int type)
 {
-  if (msg[0] == 'n')
-  {
-  }
-
   switch (msg[0])
   {
   case 'n':
@@ -332,7 +328,7 @@ void onmessage(ws_cli_conn_t client,
   default:
     break;
   }
-  // 	ws_sendframe_txt(client, "YES");
+  ws_sendframe_txt(client, "GOT IT");
 }
 
 void LoadAppSpec(AppState *s, char *specName)
@@ -527,16 +523,16 @@ void UpdateSelectedRodPosition2(SelectionState *ss, CollisionState *cs, RodGroup
     return;
   }
 
-  yBounds[nbYBounds] = (Bound){value : GetBottom(targetRod), FROM_ABOVE};
+  yBounds[nbYBounds] = (Bound){.value =  GetBottom(targetRod), FROM_ABOVE};
   nbYBounds += 1;
 
-  xBounds[nbXBounds] = (Bound){value : GetRight(targetRod), FROM_LEFT};
+  xBounds[nbXBounds] = (Bound){.value =  GetRight(targetRod), FROM_LEFT};
   nbXBounds += 1;
 
-  yBounds[nbYBounds] = (Bound){value : GetBottom(*(ss->selectedRod)), FROM_ABOVE};
+  yBounds[nbYBounds] = (Bound){.value =  GetBottom(*(ss->selectedRod)), FROM_ABOVE};
   nbYBounds += 1;
 
-  xBounds[nbXBounds] = (Bound){value : GetRight(*(ss->selectedRod)), FROM_LEFT};
+  xBounds[nbXBounds] = (Bound){.value =  GetRight(*(ss->selectedRod)), FROM_LEFT};
   nbXBounds += 1;
 
   Rod candidateRod = *(ss->selectedRod);
@@ -797,7 +793,7 @@ int main(int argc, char **argv)
     return (EXIT_FAILURE);
   }
 
-  appState = InitAppState(cfg, 0, 0);
+  appState = InitAppState(cfg, 0, 10);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
