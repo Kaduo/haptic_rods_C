@@ -185,7 +185,7 @@ typedef struct SignalState
 SignalState InitSignalState(config_t cfg)
 {
   Signal *signals = InitSignals(cfg);
-  SignalState signalState = (SignalState){signalPlaying : NO_SIGNAL, signals : signals, fd : connect_to_tty()};
+  SignalState signalState = (SignalState){.signalPlaying =  NO_SIGNAL, .signals =  signals, .fd =  connect_to_tty()};
   if (signalState.fd != -1)
   {
     // The haptic signal won't play if no direction is set, so we set it to an arbitrary value at the start.

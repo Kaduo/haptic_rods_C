@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef enum {
+typedef enum Protocol {
   PING_PROTOCOL = 0x01,
   SET_DIR_PROTOCOL = 0x82,
   ADD_SIGNAL_PROTOCOL = 0x83,

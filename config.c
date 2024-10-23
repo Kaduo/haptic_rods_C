@@ -2,7 +2,6 @@
 #include "tinyexpr.h"
 #include "config.h"
 #include <stdio.h>
-#include <ctype.h>
 #include <stddef.h>
 #include <libconfig.h>
 #include <stdbool.h>
@@ -126,18 +125,19 @@ Signal *InitSignals(config_t cfg)
   int i;
   for (i = 0; i < 10; i++)
   {
+    int l = i+1;
     signals[i] = signal_new(signal, 0, 0, 0, 0, 0);
     SetExpr16ParameterOfSignal(
-        &cfg, (uint16_t *)((void *)(&signals[i]) + offsetof(Signal, period)), i,
+        &cfg, &signals[i].period, l,
         "period_expr", 0xFFFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, amplitude)),
-        i, "amplitude_expr", 0xFF);
+        &cfg, &signals[i].amplitude,
+        l, "amplitude_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, duty)), i,
+        &cfg, &signals[i].duty, l,
         "duty_expr", 0xFF);
     SetExpr8ParameterOfSignal(
-        &cfg, (uint8_t *)((void *)(&signals[i]) + offsetof(Signal, offset)), i,
+        &cfg, &signals[i].offset, l,
         "offset_expr", 0xFF);
   }
 
@@ -214,6 +214,7 @@ Signal *InitSignals(config_t cfg)
   config_lookup_bool(&cfg, "per_group", &per_group);
   if (per_group)
   {
+    printf("SHOULD BE THERE§§!\n");
     char *groups[] = {"g1-7", "g2-4-8", "g3-6-9", "g2-4-8", "g5-10",
                       "g3-6-9", "g1-7", "g2-4-8", "g3-6-9", "g5-10"};
     int i;
@@ -223,11 +224,13 @@ Signal *InitSignals(config_t cfg)
 
       if (setting != NULL)
       {
+        printf("SHOULD ALSO BE HERE (:)");
 
         double period = ReadParameterFromSetting(setting, "period");
         if (period != PARAMETER_NOT_SET)
         {
           signals[i].period = ClampDouble(period, 0, 0xFFFF);
+          printf("%f\n", period);
         }
 
         double amplitude = ReadParameterFromSetting(setting, "amplitude");
