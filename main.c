@@ -368,7 +368,16 @@ void OpenSaveFile(AppState *s)
 
 AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId)
 {
-  AppState res = (AppState){InitTimeAndPlace(), rodGroup : NULL, InitSelectionState(), InitCollisionState(), InitSignalState(cfg), problemId : firstProblemId, next : false, userId : firstUserId, newUser : false, currentSave : NULL};
+  AppState res = (AppState){InitTimeAndPlace(),
+                            rodGroup : NULL,
+                            InitSelectionState(),
+                            InitCollisionState(),
+                            InitSignalState(cfg),
+                            problemId : firstProblemId,
+                            next : false,
+                            userId : firstUserId,
+                            newUser : false,
+                            currentSave : NULL};
   CreateUserFolder(&res);
   OpenSaveFile(&res);
   StartProblem(&res);
