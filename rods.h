@@ -57,5 +57,7 @@ void SetTopLeft(Rod *rod, Vector2 newPos);
 Color GetRodColor(Rod rod);
 RodGroup *NewRodGroup(const char *spec_name);
 
+void SaveRodGroup(RodGroup *rodGroup, FILE *file);
+
 bool StrictlyCollide(Rod rod1, Rod rod2);
 enum StrictCollisionType CheckStrictCollision(Rod rod_before, Rod rod_after, Rod other_rod);

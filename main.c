@@ -18,6 +18,11 @@
 #include <ws.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h> 
+#include <string.h> 
+#include <arpa/inet.h>
 
 #define NB_RODS_MENU 10
 
@@ -311,8 +316,6 @@ static AppState appState;
 void onmessage(ws_cli_conn_t client,
                const unsigned char *msg, uint64_t size, int type)
 {
-  char *cli;
-  cli = ws_getaddress(client);
   if (msg[0] == 'n')
   {
   }
@@ -329,11 +332,6 @@ void onmessage(ws_cli_conn_t client,
   default:
     break;
   }
-  // #ifndef DISABLE_VERBOSE
-  // 	printf("I receive a message: %s (size: %" PRId64 ", type: %d), from: %s\n",
-  // 		msg, size, type, cli);
-  // #endif
-
   // 	ws_sendframe_txt(client, "YES");
 }
 
@@ -363,7 +361,9 @@ void OpenSaveFile(AppState *s)
   snprintf(saveName, 50, "user%d/save%d.tap", s->userId, s->problemId);
   free(s->currentSave);
   s->currentSave = fopen(saveName, "w");
-  fprintf(s->currentSave, "r %f \n", s->timeAndPlace.time);
+  fprintf(s->currentSave, "s ", s->timeAndPlace.time);
+  SaveRodGroup(s->rodGroup, s->currentSave);
+  fprintf(s->currentSave, "\nr %f \n", s->timeAndPlace.time);
 }
 
 AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId)
@@ -379,8 +379,8 @@ AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId)
                             newUser : false,
                             currentSave : NULL};
   CreateUserFolder(&res);
-  OpenSaveFile(&res);
   StartProblem(&res);
+  OpenSaveFile(&res);
   return res;
 }
 
@@ -622,12 +622,12 @@ void SaveTap(AppState *s)
 
 void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
 {
-  static char *line;
+  char *line;
   size_t len = 0;
   ssize_t read;
   while ((read = getline(&line, &len, saveFile)) != -1)
   {
-    if (line[0] != '\n' && line[0] != 'r') {
+    if (line[0] != '\n' && line[0] != 'r' && line[0] != 's') {
       float newTime;
       float newMouseX;
       float newMouseY;
@@ -657,8 +657,8 @@ void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
       return;
     }
   }
-  free(line);
-  abort();
+  printf("GOODBYE\n");
+  CloseWindow();
 }
 
 void UpdateAppState(AppState *s, FILE *tapReplay)
@@ -811,6 +811,7 @@ int main(int argc, char **argv)
   FILE *save = NULL;
   if (replayName != NULL) {
     save = fopen(replayName, "r");
+    printf("%p\n", save);
   }
 
   // Main loop
@@ -830,7 +831,7 @@ int main(int argc, char **argv)
           RED);
     }
 
-    // DrawFPS(0, 0);
+    DrawFPS(0, 0);
 
     EndDrawing();
   } // <-- Main loop
@@ -839,6 +840,30 @@ int main(int argc, char **argv)
     fclose(appState.currentSave);
   }
   CloseWindow();
+
+    // TODO : find local address automatically
+    //   struct ifaddrs * ifAddrStruct=NULL;
+    // struct ifaddrs * ifa=NULL;
+    // void * tmpAddrPtr=NULL;
+
+    // getifaddrs(&ifAddrStruct);
+
+    // for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+    //     if (!ifa->ifa_addr) {
+    //         continue;
+    //     }
+    //     if (ifa->ifa_addr->sa_family == AF_INET) { // check it is IP4
+    //         // is a valid IP4 Address
+    //         tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+    //         char addressBuffer[INET_ADDRSTRLEN];
+    //         inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+    //         if (strcmp(ifa->ifa_name, "wlan0") == 0) {
+    //           printf("My local address is : %s\n", addressBuffer);
+    //         }
+    //         break;
+    //     }
+    // }
+    // if (ifAddrStruct!=NULL) freeifaddrs(ifAddrStruct);
 
   return 0;
 }
