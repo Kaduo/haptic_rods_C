@@ -361,7 +361,7 @@ void OpenSaveFile(AppState *s)
   snprintf(saveName, 50, "user%d/save%d.tap", s->userId, s->problemId);
   free(s->currentSave);
   s->currentSave = fopen(saveName, "w");
-  fprintf(s->currentSave, "s ", s->timeAndPlace.time);
+  fprintf(s->currentSave, "s ");
   SaveRodGroup(s->rodGroup, s->currentSave);
   fprintf(s->currentSave, "\nr %f \n", s->timeAndPlace.time);
 }
