@@ -748,6 +748,14 @@ void ParseArgs(int argc, char **argv, char **configName, char **specName, char *
 int main(int argc, char **argv)
 {
 
+  const char *host;
+
+  #ifdef DESKTOP
+  host = "localhost";
+  #else
+  host = "192.168.1.24";
+  #endif
+  // Create a websocket
   ws_socket(&(struct ws_server){
       /*ma
        * Bind host:
@@ -755,7 +763,7 @@ int main(int argc, char **argv)
        * 0.0.0.0   -> global IPv4
        * ::        -> global IPv4+IPv6 (DualStack)
        */
-      .host = "localhost",
+      .host = host,
       .port = 8080,
       .thread_loop = 1,
       .timeout_ms = 1000,
@@ -784,7 +792,7 @@ int main(int argc, char **argv)
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
-#ifdef FULLSCREEN
+#ifndef DESKTOP
   HideCursor();
   ToggleFullscreen();
 #endif
