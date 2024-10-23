@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <cstdio.h>
 #include <raylib.h>
 
 #define NB_RODS_MENU 10
