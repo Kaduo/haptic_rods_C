@@ -589,6 +589,9 @@ void ClearAppState(AppState *s)
   ClearCollisionState(&s->collisionState);
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
+  if (s->currentSave != NULL) {
+    fclose(appState.currentSave);
+  }
   s->next = false;
   s->newUser = false;
 }
