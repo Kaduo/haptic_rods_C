@@ -339,6 +339,7 @@ void LoadAppSpec(AppState *s, char *specName)
 
 void CreateUserFolder(AppState *s)
 {
+  printf("COUCOU\n");
   char folderName[50];
   snprintf(folderName, 50, "user%d", s->userId);
   printf("ICI : %s\n", folderName);
