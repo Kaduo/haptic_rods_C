@@ -341,6 +341,7 @@ void CreateUserFolder(AppState *s)
 {
   char folderName[50];
   snprintf(folderName, 50, "user%d", s->userId);
+  printf("ICI : %s\n", folderName);
   mkdir(folderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
@@ -590,7 +591,8 @@ void ClearAppState(AppState *s)
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
   if (s->currentSave != NULL) {
-    fclose(appState.currentSave);
+    fclose(s->currentSave);
+    s->currentSave = NULL;
   }
   s->next = false;
   s->newUser = false;
@@ -796,7 +798,7 @@ int main(int argc, char **argv)
     return (EXIT_FAILURE);
   }
 
-  appState = InitAppState(cfg, 0, 10);
+  appState = InitAppState(cfg, 0, 0);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
