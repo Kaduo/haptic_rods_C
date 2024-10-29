@@ -704,13 +704,6 @@ void UpdateAppState(AppState *s, FILE *tapReplay)
     return;
   }
 
-  if (IsKeyPressed(KEY_N) || s->next)
-  {
-    ClearAppState(s);
-    StartProblem(s);
-    OpenSaveFile(s);
-  }
-
   if (IsKeyPressed(KEY_U) || s->newUser)
   {
     ClearAppState(s);
@@ -718,7 +711,16 @@ void UpdateAppState(AppState *s, FILE *tapReplay)
     StartProblem(s);
     OpenSaveFile(s);
   }
+
+  if (IsKeyPressed(KEY_N) || s->next)
+  {
+    ClearAppState(s);
+    StartProblem(s);
+    OpenSaveFile(s);
+  }
 }
+
+
 void ParseArgs(int argc, char **argv, char **configName, char **specName, char **replayName)
 {
   int c;
