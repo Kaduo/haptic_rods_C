@@ -314,6 +314,7 @@ typedef struct AppState
   FILE *currentSave;
   bool isReplay;
   char *saveName;
+  bool shouldEnd;
 } AppState;
 
 static AppState appState;
@@ -330,6 +331,8 @@ void onmessage(ws_cli_conn_t client,
   case 'u':
     appState.newUser = true;
     appState.userId = strtol(&(msg[1]), NULL, 10);
+  case 'e':
+    appState.shouldEnd = true;
   default:
     break;
   }
@@ -400,7 +403,8 @@ AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId, bool is
                             .newUser =  false,
                             .currentSave =  NULL,
                             .isReplay = isReplay,
-                            .saveName = saveName};
+                            .saveName = saveName,
+                            .shouldEnd = false};
   CreateUserFolder(&res);
   StartProblem(&res);
   OpenSaveFile(&res);
@@ -616,7 +620,7 @@ void ClearAppState(AppState *s)
   ClearCollisionState(&s->collisionState);
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
-  if (s->currentSave != NULL) { 
+  if (s->currentSave != NULL && !s->isReplay) { 
     gettimeofday(&tv, NULL);
     fprintf(s->currentSave, "t %ld \n", tv.tv_sec);
     fclose(s->currentSave);
@@ -686,11 +690,10 @@ void UpdateTapFromSave(AppState *s)
       return;
     }
   }
-  printf("GOODBYE\n");
-  CloseWindow();
+  s->shouldEnd = true;
 }
 
-void UpdateAppState(AppState *s)
+bool UpdateAppState(AppState *s)
 {
   if (s->isReplay) {
     UpdateTapFromSave(s);
@@ -725,12 +728,6 @@ void UpdateAppState(AppState *s)
   UpdateCollisionState(&s->collisionState);
   UpdateSelectionTimer(&s->selectionState);
 
-  if (s->problemId > NB_PROBLEMS)
-  {
-    fclose(s->currentSave);
-    return;
-  }
-
   if (IsKeyPressed(KEY_U) || s->newUser)
   {
     ClearAppState(s);
@@ -745,6 +742,13 @@ void UpdateAppState(AppState *s)
     StartProblem(s);
     OpenSaveFile(s);
   }
+
+  if (s->shouldEnd) {
+    ClearAppState(s);
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -846,13 +850,14 @@ int main(int argc, char **argv)
   }
 
   // Main loop
-  while (!WindowShouldClose())
+  bool goOn = true;
+  while (!WindowShouldClose() && goOn)
   {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
 
-    UpdateAppState(&appState);
+    goOn = UpdateAppState(&appState);
     DrawRodGroup(appState.rodGroup);
 
     if (save != NULL && (appState.timeAndPlace.MouseButtonDown || appState.timeAndPlace.MouseButtonPressed)) {
@@ -867,9 +872,7 @@ int main(int argc, char **argv)
     EndDrawing();
   } // <-- Main loop
 
-  if (appState.currentSave != NULL) {
-    fclose(appState.currentSave);
-  }
+  ClearAppState(&appState);
   CloseWindow();
 
     // TODO : find local address automatically
