@@ -331,8 +331,10 @@ void onmessage(ws_cli_conn_t client,
   case 'u':
     appState.newUser = true;
     appState.userId = strtol(&(msg[1]), NULL, 10);
+    break;
   case 'e':
     appState.shouldEnd = true;
+    break;
   default:
     break;
   }
