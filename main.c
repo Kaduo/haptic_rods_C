@@ -616,7 +616,9 @@ void ClearAppState(AppState *s)
   ClearCollisionState(&s->collisionState);
   ClearSelection(&s->selectionState);
   ClearSignal(&s->signalState);
-  if (s->currentSave != NULL) {
+  if (s->currentSave != NULL) { 
+    gettimeofday(&tv, NULL);
+    fprintf(s->currentSave, "t %ld \n", tv.tv_sec);
     fclose(s->currentSave);
     s->currentSave = NULL;
   }
