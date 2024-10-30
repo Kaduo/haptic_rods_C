@@ -376,7 +376,7 @@ void StartProblem(AppState *s)
 void OpenSaveFile(AppState *s)
 {
   char saveName[50];
-  snprintf(saveName, 50, "user%d/save%d.tap", s->userId, s->problemId);
+  snprintf(saveName, 50, "user%d/rods_u%dp%d.tap", s->userId, s->userId, s->problemId);
   free(s->currentSave);
 
   if (!s->isReplay) {
