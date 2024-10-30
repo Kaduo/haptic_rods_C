@@ -23,10 +23,13 @@
 #include <netinet/in.h> 
 #include <string.h> 
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #define NB_RODS_MENU 10
 
 const int NB_PROBLEMS = 10;
+
+struct timeval tv;
 
 const int FPS = 40;
 
@@ -83,7 +86,7 @@ typedef struct SelectionState
 
 SelectionState InitSelectionState()
 {
-  return (SelectionState){selectedRod : NULL, selectionTimer : 0, offset : (Vector2){0, 0}};
+  return (SelectionState){.selectedRod =  NULL, .selectionTimer =  0, .offset =  (Vector2){0, 0}};
 }
 
 #define MAX_ROD_COLLIDING 22
@@ -97,7 +100,7 @@ typedef struct CollisionState
 
 CollisionState InitCollisionState()
 {
-  return (CollisionState){collisionTimer : 0, collided : false, collidedPreviously : false};
+  return (CollisionState){.collisionTimer =  0, .collided =  false, .collidedPreviously =  false};
 }
 
 // WEBSOCKET
@@ -309,6 +312,8 @@ typedef struct AppState
   int userId;
   bool newUser;
   FILE *currentSave;
+  bool isReplay;
+  char *saveName;
 } AppState;
 
 static AppState appState;
@@ -337,6 +342,12 @@ void LoadAppSpec(AppState *s, char *specName)
   s->rodGroup = NewRodGroup(specName);
 }
 
+void LoadAppSpecFromTap(AppState *s, char *specName)
+{
+  free(s->rodGroup);
+  s->rodGroup = NewRodGroupFromTap(specName);
+}
+
 void CreateUserFolder(AppState *s)
 {
   printf("COUCOU\n");
@@ -348,9 +359,13 @@ void CreateUserFolder(AppState *s)
 
 void StartProblem(AppState *s)
 {
-  char specName[50];
-  snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
-  LoadAppSpec(s, specName);
+  if (!s->isReplay) {
+    char specName[50];
+    snprintf(specName, 50, "problem_set/problem%d.rods", s->problemId);
+    LoadAppSpec(s, specName);
+  } else {
+    LoadAppSpecFromTap(s, s->saveName);
+  }
 }
 
 void OpenSaveFile(AppState *s)
@@ -358,24 +373,34 @@ void OpenSaveFile(AppState *s)
   char saveName[50];
   snprintf(saveName, 50, "user%d/save%d.tap", s->userId, s->problemId);
   free(s->currentSave);
-  s->currentSave = fopen(saveName, "w");
-  fprintf(s->currentSave, "s ");
-  SaveRodGroup(s->rodGroup, s->currentSave);
-  fprintf(s->currentSave, "\nr %f \n", s->timeAndPlace.time);
+
+  if (!s->isReplay) {
+    s->currentSave = fopen(saveName, "w");
+    fprintf(s->currentSave, "s ");
+    SaveRodGroup(s->rodGroup, s->currentSave);
+    gettimeofday(&tv, NULL);
+    fprintf(s->currentSave, "\nt %ld \n", tv.tv_sec);
+    fprintf(s->currentSave, "r %f \n", s->timeAndPlace.time);
+
+  } else {
+    s->currentSave = fopen(s->saveName, "r");
+  }
 }
 
-AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId)
+AppState InitAppState(config_t cfg, int firstUserId, int firstProblemId, bool isReplay, char *saveName)
 {
   AppState res = (AppState){InitTimeAndPlace(),
-                            rodGroup : NULL,
+                            .rodGroup = NULL,
                             InitSelectionState(),
                             InitCollisionState(),
                             InitSignalState(cfg),
-                            problemId : firstProblemId,
-                            next : false,
-                            userId : firstUserId,
-                            newUser : false,
-                            currentSave : NULL};
+                            .problemId = firstProblemId,
+                            .next = false,
+                            .userId =  firstUserId,
+                            .newUser =  false,
+                            .currentSave =  NULL,
+                            .isReplay = isReplay,
+                            .saveName = saveName};
   CreateUserFolder(&res);
   StartProblem(&res);
   OpenSaveFile(&res);
@@ -615,47 +640,47 @@ void SaveTap(AppState *s)
   else
   {
     fprintf(s->currentSave,
-            "%f %f %f \n",
+            "m %f %f %f \n",
             s->timeAndPlace.time,
             s->timeAndPlace.mousePosition.x,
             s->timeAndPlace.mousePosition.y);
   }
 }
 
-void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
+void UpdateTapFromSave(AppState *s)
 {
   char *line;
   size_t len = 0;
   ssize_t read;
-  while ((read = getline(&line, &len, saveFile)) != -1)
+  while ((read = getline(&line, &len, s->currentSave)) != -1)
   {
-    if (line[0] != '\n' && line[0] != 'r' && line[0] != 's') {
+    if (line[0] == 'm') {
       float newTime;
       float newMouseX;
       float newMouseY;
-      sscanf(line, "%f %f %f ", &newTime, &newMouseX, &newMouseY);
+      sscanf(line, "m %f %f %f ", &newTime, &newMouseX, &newMouseY);
       Vector2 newMousePos = (Vector2){newMouseX, newMouseY};
 
-      if (tap->MouseButtonReleased) {
-        tap->MouseButtonPressed = true;
-        tap->MouseButtonReleased = false;
-        WaitTime(newTime - tap->time - 1./FPS);
+      if (s->timeAndPlace.MouseButtonReleased) {
+        s->timeAndPlace.MouseButtonPressed = true;
+        s->timeAndPlace.MouseButtonReleased = false;
+        WaitTime(newTime - s->timeAndPlace.time - 1./FPS);
       } else {
-        tap->MouseButtonPressed = false;
-        tap->MouseButtonDown = true;
+        s->timeAndPlace.MouseButtonPressed = false;
+        s->timeAndPlace.MouseButtonDown = true;
       }
-      tap->time = newTime;
-      tap->mousePosition = newMousePos;
+      s->timeAndPlace.time = newTime;
+      s->timeAndPlace.mousePosition = newMousePos;
       return;
 
     } else if (line[0] == 'r')
     {
-      tap->MouseButtonReleased = true;
-      tap->MouseButtonDown = false;
-      tap->MouseButtonPressed = false;
+      s->timeAndPlace.MouseButtonReleased = true;
+      s->timeAndPlace.MouseButtonDown = false;
+      s->timeAndPlace.MouseButtonPressed = false;
       float newTime;
       sscanf(line, "r %f", &newTime);
-      tap->time = newTime;
+      s->timeAndPlace.time = newTime;
       return;
     }
   }
@@ -663,10 +688,10 @@ void UpdateTapFromSave(TimeAndPlace *tap, FILE *saveFile)
   CloseWindow();
 }
 
-void UpdateAppState(AppState *s, FILE *tapReplay)
+void UpdateAppState(AppState *s)
 {
-  if (tapReplay != NULL) {
-    UpdateTapFromSave(&s->timeAndPlace, tapReplay);
+  if (s->isReplay) {
+    UpdateTapFromSave(s);
   } else {
     UpdateTimeAndPlace(&s->timeAndPlace);
   }
@@ -689,7 +714,7 @@ void UpdateAppState(AppState *s, FILE *tapReplay)
     somethingGoingOn = false;
   }
 
-  if (somethingGoingOn && tapReplay == NULL) {
+  if (somethingGoingOn && !s->isReplay) {
     SaveTap(s);
   }
   
@@ -801,7 +826,7 @@ int main(int argc, char **argv)
     return (EXIT_FAILURE);
   }
 
-  appState = InitAppState(cfg, 0, 0);
+  appState = InitAppState(cfg, 0, 5, replayName != NULL, replayName);
 
   InitWindow(TABLET_LENGTH, TABLED_HEIGHT, "HapticRods");
 
@@ -825,7 +850,7 @@ int main(int argc, char **argv)
     ClearBackground(RAYWHITE);
 
 
-    UpdateAppState(&appState, save);
+    UpdateAppState(&appState);
     DrawRodGroup(appState.rodGroup);
 
     if (save != NULL && (appState.timeAndPlace.MouseButtonDown || appState.timeAndPlace.MouseButtonPressed)) {

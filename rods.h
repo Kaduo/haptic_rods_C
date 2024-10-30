@@ -57,6 +57,8 @@ void SetRight(Rod *rod, float right);
 void SetTopLeft(Rod *rod, Vector2 newPos);
 Color GetRodColor(Rod rod);
 RodGroup *NewRodGroup(const char *spec_name);
+RodGroup *NewRodGroupFromTap(const char *spec_name);
+
 
 void SaveRodGroup(RodGroup *rodGroup, FILE *file);
 

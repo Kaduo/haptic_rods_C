@@ -14,7 +14,7 @@ const Color COLORS[] = {LIGHTGRAY, RED, GREEN, PURPLE, YELLOW,
 
 Rod NewRod(int numericLength, float x, float y)
 {
-  return (Rod){rect : (Rectangle){x, y, numericLength * UNIT_ROD_LENGTH, ROD_HEIGHT}, numericLength};
+  return (Rod){.rect =  (Rectangle){x, y, numericLength * UNIT_ROD_LENGTH, ROD_HEIGHT}, numericLength};
 }
 
 Vector2 GetTopLeft(Rod rod)
@@ -114,6 +114,31 @@ RodGroup *NewRodGroup(const char *spec_name)
   return rod_group;
 }
 
+RodGroup *NewRodGroupFromTap(const char *spec_name)
+{
+  int i;
+  int nbRods;
+  FILE *f;
+  f = fopen(spec_name, "r");
+  if (f == NULL)
+  {
+    perror("Couldn't open the spec.\n");
+    abort();
+  }
+  fscanf(f, "s %d ", &nbRods);
+  RodGroup *rod_group = malloc(sizeof(RodGroup) + nbRods * sizeof(Rod));
+  rod_group->nbRods = nbRods;
+  for (i = 0; i < nbRods; i++)
+  {
+    int l;
+    float x;
+    float y;
+    fscanf(f, "%d %f %f ", &l, &x, &y);
+    rod_group->rods[i] = NewRod(l, x, y);
+  }
+  fclose(f);
+  return rod_group;
+}
 
 void SaveRodGroup(RodGroup *rodGroup, FILE *file)
 {
