@@ -696,6 +696,7 @@ void UpdateTapFromSave(AppState *s)
 bool UpdateAppState(AppState *s)
 {
   if (s->isReplay) {
+    printf("ohno!\n");
     UpdateTapFromSave(s);
   } else {
     UpdateTimeAndPlace(&s->timeAndPlace);
