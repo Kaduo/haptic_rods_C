@@ -744,6 +744,7 @@ bool UpdateAppState(AppState *s)
   }
 
   if (s->shouldEnd) {
+    printf("hu!\n");
     ClearAppState(s);
     return false;
   }
