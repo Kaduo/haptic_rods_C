@@ -326,11 +326,11 @@ void onmessage(ws_cli_conn_t client,
   {
   case 'n':
     appState.next = true;
-    appState.problemId = strtol(&(msg[1]), NULL, 10);
+    appState.problemId = strtol((const char*)&(msg[1]), NULL, 10);
     break;
   case 'u':
     appState.newUser = true;
-    appState.userId = strtol(&(msg[1]), NULL, 10);
+    appState.userId = strtol((const char*)&(msg[1]), NULL, 10);
     break;
   case 'e':
     appState.shouldEnd = true;
