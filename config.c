@@ -15,47 +15,51 @@ typedef struct KeyValuePair {
   int value;
 } KeyValuePair;
 
+KeyValuePair newPair(char *key, int value) {
+  return (KeyValuePair){
+    .key = key,
+    .value = value
+  };
+}
+
 typedef struct ParameterDict {
   int length;
-  KeyValuePair *entries;
+  KeyValuePair entries[];
 } ParameterDict;
 
-int get(ParameterDict dict, char *key) {
-  for (int i = 0; i < dict.length; i++) {
-    if (strcmp(key, dict.entries[i].key) == 0)
+int get(ParameterDict *dict, char *key) {
+  printf("key : %s", key);
+  for (int i = 0; i < dict->length; i++) {
+    printf("compare to : %s\n", dict->entries[i].key);
+    if (strcmp(key, dict->entries[i].key) == 0)
     {
-      return dict.entries[i].value;
+      return dict->entries[i].value;
     }
   }
   fprintf(stderr, "Erreur : la clé %s n'est pas dans le dictionnaire.\n", key);
   return 9999;
 }
 
+ParameterDict *CreateDict() {
+  int length = 5;
+  ParameterDict *dict = malloc(sizeof(ParameterDict) + length*sizeof(KeyValuePair));
+  dict->length = length;
+  dict->entries[0] = newPair("sine", SINE);
+  dict->entries[1] = newPair("steady", STEADY);
+  dict->entries[2] = newPair("triangle", TRIANGLE);
+  dict->entries[3] = newPair("front teeth", FRONT_TEETH);
+  dict->entries[4] = newPair("back teeth", BACK_TEETH);
+  return dict;
+}
+
+
 void SetSignalKind(config_t *cfg, SignalType *signalKind)
 {
   const char *signalName;
+  ParameterDict *dict  = CreateDict();
   if (config_lookup_string(cfg, "signal_type", &signalName))
   {
-    if (strcmp(signalName, "sine") == 0)
-    {
-      *signalKind = SINE;
-    }
-    else if (strcmp(signalName, "steady") == 0)
-    {
-      *signalKind = STEADY;
-    }
-    else if (strcmp(signalName, "triangle") == 0)
-    {
-      *signalKind = TRIANGLE;
-    }
-    else if (strcmp(signalName, "front teeth") == 0)
-    {
-      *signalKind = FRONT_TEETH;
-    }
-    else if (strcmp(signalName, "back teeth") == 0)
-    {
-      *signalKind = BACK_TEETH;
-    }
+    *signalKind = get(dict, signalName);
   }
 }
 
@@ -205,6 +209,7 @@ Signal *InitSignals(config_t cfg)
         if (config_setting_lookup_string(setting, signal_parameter_name,
                                          &signal_name))
         {
+
           if (strcmp(signal_name, "sine") == 0)
           {
             signal = SINE;
