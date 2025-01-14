@@ -324,15 +324,15 @@ void onmessage(ws_cli_conn_t client,
 {
   switch (msg[0])
   {
-  case 'n':
+  case 'n': // Launch next problem
     appState.next = true;
     appState.problemId = strtol((const char*)&(msg[1]), NULL, 10);
     break;
-  case 'u':
+  case 'u': // Create new user
     appState.newUser = true;
     appState.userId = strtol((const char*)&(msg[1]), NULL, 10);
     break;
-  case 'e':
+  case 'e': // Close the app
     appState.shouldEnd = true;
     break;
   default:
