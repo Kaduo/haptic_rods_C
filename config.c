@@ -10,6 +10,27 @@
 
 const double PARAMETER_NOT_SET = -10;
 
+typedef struct KeyValuePair {
+  char *key;
+  int value;
+} KeyValuePair;
+
+typedef struct ParameterDict {
+  int length;
+  KeyValuePair *entries;
+} ParameterDict;
+
+int get(ParameterDict dict, char *key) {
+  for (int i = 0; i < dict.length; i++) {
+    if (strcmp(key, dict.entries[i].key) == 0)
+    {
+      return dict.entries[i].value;
+    }
+  }
+  fprintf(stderr, "Erreur : la clé %s n'est pas dans le dictionnaire.\n", key);
+  return 9999;
+}
+
 void SetSignalKind(config_t *cfg, SignalType *signalKind)
 {
   const char *signalName;
