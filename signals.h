@@ -12,8 +12,8 @@ typedef enum Protocol {
 } Protocol;
 
 typedef enum {
-  SINE = 0x02,
   STEADY = 0x01,
+  SINE = 0x02,
   TRIANGLE = 0x03,
   FRONT_TEETH = 0x04,
   BACK_TEETH = 0x05,
